@@ -3,78 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 10.7 - US REGION FIX</title>
+    <title>БАЗА 10.8 - FULL CONTROL</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         :root { --accent: #ff9d00; --bg: #0e120a; --panel: #1a1d16; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
+        
         #mode-selector { position: fixed; inset: 0; z-index: 10000; background: #0e120a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
         .mode-btn { padding: 20px; font-size: 20px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; width: 280px; }
+
         #main-container { display: flex; width: 100vw; height: 100vh; }
         #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
         #bg-media-container { position: absolute; width: 100%; height: 100%; z-index: 1; display: flex; align-items: center; justify-content: center; transform-origin: bottom center; }
         #bg-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
+        #hero-layer { position: absolute; inset: 0; z-index: 2; }
+
         #scanner { width: 100%; max-width: 350px; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; border-left: 2px solid #2d3326; }
         .hidden { display: none !important; }
         .group { background: #22261d; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 8px; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); }
-        .hero { position: absolute; will-change: transform; pointer-events: none; }
+        h4 { font-size: 12px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 8px; transition: 0.2s; }
+        button:active { transform: scale(0.95); background: var(--accent); color: black; }
+        
+        label { font-size: 11px; display: block; margin: 10px 0 5px; opacity: 0.8; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+        
+        .hero { position: absolute; will-change: transform; pointer-events: none; transition: width 0.3s; }
+        #db-status { font-size: 10px; text-align: center; padding: 4px; border-radius: 4px; background: #000; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div id="mode-selector">
-    <h2 style="color:var(--accent)">БАЗА 10.7</h2>
-    <button onclick="selectMode('screen')" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН</button>
-    <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ</button>
+    <h2 style="color:var(--accent)">БАЗА 10.8</h2>
+    <button onclick="selectMode('screen')" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН (ПРОЕКТОР)</button>
+    <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ (ТЕЛЕФОН)</button>
 </div>
 
 <div id="main-container">
     <div id="forest">
         <div id="bg-media-container"><img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80"></div>
         <div id="hero-layer"></div>
+        <audio id="forest-audio" loop></audio>
     </div>
+
     <div id="scanner" class="hidden">
+        <div id="db-status">СВЯЗЬ: ОЖИДАНИЕ...</div>
+
         <div class="group">
-            <div id="db-status" style="font-size:12px; font-weight:bold; text-align:center; padding:5px; border-radius:5px; background:#000;">СВЯЗЬ: ОЖИДАНИЕ...</div>
-            <label style="font-size:11px; display:block; margin-top:15px;">МАСШТАБ ЛЕСА:</label>
-            <input type="range" id="zoom-range" min="50" max="250" value="100">
-            <button onclick="$('bg-in').click()" style="margin-top:15px;">🖼️ СМЕНИТЬ ФОН</button>
+            <h4>🌲 Лес</h4>
+            <label>Масштаб:</label>
+            <input type="range" id="zoom-range" min="50" max="300" value="100">
+            <button onclick="$('bg-in').click()">🖼️ Сменить фон</button>
             <input type="file" id="bg-in" hidden accept="image/*">
         </div>
-        <div id="hero-list"></div>
+
+        <div class="group">
+            <h4>🔊 Атмосфера</h4>
+            <label>Громкость:</label>
+            <input type="range" id="vol-range" min="0" max="100" value="50">
+            <button onclick="$('audio-in').click()">🎵 Загрузить звук</button>
+            <input type="file" id="audio-in" hidden accept="audio/*">
+        </div>
+
+        <div class="group">
+            <h4>👾 Герои (Нейронка)</h4>
+            <button onclick="$('hero-in').click()" style="background: var(--accent); color: black;">✨ Добавить героя</button>
+            <input type="file" id="hero-in" hidden accept="image/*">
+            <button onclick="clearHeroes()" style="background: #5e2626; font-size: 10px;">🗑️ Удалить всех</button>
+        </div>
     </div>
 </div>
 
 <script>
     const $ = id => document.getElementById(id);
 
-    // ИСПРАВЛЕННЫЙ АДРЕС (us-central1)
     const firebaseConfig = {
         apiKey: "AIzaSyAOdgn7U8MKRbroByVJJXyL2NgQS405M64",
         authDomain: "lesbaza-d8fc9.firebaseapp.com",
         projectId: "lesbaza-d8fc9",
-        databaseURL: "https://lesbaza-d8fc9-default-rtdb.firebaseio.com/" // <- ИСПРАВЛЕНО
+        databaseURL: "https://lesbaza-d8fc9-default-rtdb.firebaseio.com/"
     };
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const dbRef = database.ref('forest_session');
 
-    database.ref('.info/connected').on('value', snap => {
-        const s = $('db-status');
-        if (snap.val() === true) {
-            s.innerText = "СВЯЗЬ: ОК ✅"; s.style.color = "#00ff00";
-        } else {
-            s.innerText = "СВЯЗЬ: ОШИБКА ❌"; s.style.color = "#ff0000";
-        }
-    });
-
     let isRemote = false;
     let heroes = [];
+
+    // Проверка связи
+    database.ref('.info/connected').on('value', snap => {
+        const s = $('db-status');
+        if (snap.val() === true) { s.innerText = "СВЯЗЬ: ОК ✅"; s.style.color = "#00ff00"; }
+        else { s.innerText = "СВЯЗЬ: ОШИБКА ❌"; s.style.color = "#ff0000"; }
+    });
 
     function selectMode(mode) {
         $('mode-selector').style.display = 'none';
@@ -82,47 +108,85 @@
         if (isRemote) {
             $('scanner').classList.remove('hidden');
             $('forest').classList.add('hidden');
-            setupRemoteListeners();
+            setupRemoteControls();
+        } else {
+            // На экране сразу запускаем звук при первом клике (политика браузеров)
+            document.body.onclick = () => $('forest-audio').play();
         }
         setupSync();
         requestAnimationFrame(animate);
     }
 
-    function setupRemoteListeners() {
-        $('zoom-range').oninput = (e) => {
-            dbRef.child('world').update({ zoom: parseInt(e.target.value) });
-        };
-        $('bg-in').onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = () => dbRef.child('world').update({ bg: reader.result });
-            reader.readAsDataURL(e.target.files[0]);
-        };
+    // ТЕЛЕФОН: Отправка команд
+    function setupRemoteControls() {
+        $('zoom-range').oninput = e => dbRef.child('world').update({ zoom: e.target.value });
+        $('vol-range').oninput = e => dbRef.child('world').update({ volume: e.target.value / 100 });
+        
+        $('bg-in').onchange = e => uploadFile(e.target.files[0], 'bg');
+        $('audio-in').onchange = e => uploadFile(e.target.files[0], 'audio');
+        $('hero-in').onchange = e => uploadFile(e.target.files[0], 'hero');
     }
 
+    function uploadFile(file, type) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (type === 'bg') dbRef.child('world').update({ bg: reader.result });
+            if (type === 'audio') dbRef.child('world').update({ audio: reader.result });
+            if (type === 'hero') {
+                const id = 'h_' + Date.now();
+                dbRef.child('heroes').child(id).set({
+                    src: reader.result,
+                    x: Math.random() * 500,
+                    y: Math.random() * 400 + 100,
+                    size: Math.random() * 150 + 50,
+                    speed: Math.random() * 20 + 5,
+                    dx: Math.random() > 0.5 ? 1 : -1
+                });
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearHeroes() { dbRef.child('heroes').remove(); }
+
+    // ПРОЕКТОР: Прием команд
     function setupSync() {
         dbRef.on('value', snap => {
             const data = snap.val() || {};
-            if (data.world && !isRemote) {
-                if (data.world.zoom) $('bg-img').style.transform = `scale(${data.world.zoom/100})`;
-                if (data.world.bg) $('bg-img').src = data.world.bg;
-            }
-            const cloudHeroes = data.heroes || {};
-            heroes.forEach(h => { if (!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; } });
-            heroes = heroes.filter(h => !h.deleted);
-            Object.keys(cloudHeroes).forEach(id => {
-                let h = heroes.find(x => x.id === id);
-                if (!h) {
-                    const img = document.createElement('img');
-                    img.src = cloudHeroes[id].src;
-                    img.className = 'hero';
-                    document.getElementById('hero-layer').appendChild(img);
-                    h = { id, el: img };
-                    heroes.push(h);
+            
+            if (!isRemote) {
+                // Синхро мира и звука
+                if (data.world) {
+                    if (data.world.zoom) $('bg-img').style.transform = `scale(${data.world.zoom/100})`;
+                    if (data.world.bg) $('bg-img').src = data.world.bg;
+                    if (data.world.audio && $('forest-audio').src !== data.world.audio) {
+                        $('forest-audio').src = data.world.audio;
+                        $('forest-audio').play();
+                    }
+                    if (data.world.volume !== undefined) $('forest-audio').volume = data.world.volume;
                 }
-                const d = cloudHeroes[id];
-                h.x = d.x; h.y = d.y; h.size = d.size; h.speed = d.speed; h.dx = d.dx;
-                h.el.style.width = h.size + 'px';
-            });
+
+                // Синхро героев
+                const cloudHeroes = data.heroes || {};
+                heroes.forEach(h => { if (!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; } });
+                heroes = heroes.filter(h => !h.deleted);
+
+                Object.keys(cloudHeroes).forEach(id => {
+                    let h = heroes.find(x => x.id === id);
+                    if (!h) {
+                        const img = document.createElement('img');
+                        img.src = cloudHeroes[id].src;
+                        img.className = 'hero';
+                        $('hero-layer').appendChild(img);
+                        h = { id, el: img };
+                        heroes.push(h);
+                    }
+                    const d = cloudHeroes[id];
+                    h.x = d.x; h.y = d.y; h.size = d.size; h.speed = d.speed; h.dx = d.dx;
+                    h.el.style.width = h.size + 'px';
+                });
+            }
         });
     }
 
@@ -131,8 +195,8 @@
             const vw = $('forest').clientWidth;
             heroes.forEach(h => {
                 h.x += (h.speed / 10) * h.dx;
-                if (h.x > vw) h.x = -h.size;
-                if (h.x < -h.size) h.x = vw;
+                if (h.x > vw + 100) h.x = -h.size;
+                if (h.x < -h.size - 100) h.x = vw;
                 h.el.style.transform = `translate(${h.x}px, ${h.y}px) scaleX(${h.dx > 0 ? -1 : 1})`;
             });
         }
