@@ -3,185 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 10.5 - СВЯЗЬ УСТАНОВЛЕНА</title>
+    <title>БАЗА 10.7 - US REGION FIX</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         :root { --accent: #ff9d00; --bg: #0e120a; --panel: #1a1d16; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
-        
-        #mode-selector { 
-            position: fixed; inset: 0; z-index: 10000; 
-            background: #0e120a; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; gap: 25px; 
-        }
-        .mode-btn { 
-            padding: 25px 50px; font-size: 22px; font-weight: bold; 
-            border-radius: 15px; border: none; cursor: pointer; width: 320px;
-        }
-
+        #mode-selector { position: fixed; inset: 0; z-index: 10000; background: #0e120a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .mode-btn { padding: 20px; font-size: 20px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; width: 280px; }
         #main-container { display: flex; width: 100vw; height: 100vh; }
         #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
         #bg-media-container { position: absolute; width: 100%; height: 100%; z-index: 1; display: flex; align-items: center; justify-content: center; transform-origin: bottom center; }
-        #bg-img, #bg-video { width: 100%; height: 100%; object-fit: contain; transition: transform 0.2s; }
-
-        #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-
+        #bg-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
         #scanner { width: 100%; max-width: 350px; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; border-left: 2px solid #2d3326; }
         .hidden { display: none !important; }
         .group { background: #22261d; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
         button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 8px; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); margin: 10px 0; }
-        .hero { position: absolute; will-change: transform; }
-        .journal-item { background: #151812; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #444; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); }
+        .hero { position: absolute; will-change: transform; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="mode-selector">
-    <h1 style="color:var(--accent); margin-bottom:10px;">БАЗА 10.5</h1>
-    <button id="btn-screen" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН (ПРОЕКТОР)</button>
-    <button id="btn-remote" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ (ТЕЛЕФОН)</button>
+    <h2 style="color:var(--accent)">БАЗА 10.7</h2>
+    <button onclick="selectMode('screen')" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН</button>
+    <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ</button>
 </div>
 
 <div id="main-container">
     <div id="forest">
-        <div id="bg-media-container">
-            <img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80">
-            <video id="bg-video" loop muted playsinline style="display:none;"></video>
-        </div>
+        <div id="bg-media-container"><img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80"></div>
         <div id="hero-layer"></div>
     </div>
-
     <div id="scanner" class="hidden">
         <div class="group">
-            <div style="font-size:12px; color:var(--accent); font-weight:bold;">СЕТЬ: <span id="db-status">ПРОВЕРКА...</span></div>
-            <button onclick="$('bg-in').click()">🖼️ СМЕНИТЬ ФОН</button>
-            <input type="file" id="bg-in" hidden accept="image/*,video/*">
-            <label style="font-size:11px; display:block; margin-top:15px;">МАСШТАБ:</label>
-            <input type="range" id="zoom-ctrl" min="50" max="250" value="100">
+            <div id="db-status" style="font-size:12px; font-weight:bold; text-align:center; padding:5px; border-radius:5px; background:#000;">СВЯЗЬ: ОЖИДАНИЕ...</div>
+            <label style="font-size:11px; display:block; margin-top:15px;">МАСШТАБ ЛЕСА:</label>
+            <input type="range" id="zoom-range" min="50" max="250" value="100">
+            <button onclick="$('bg-in').click()" style="margin-top:15px;">🖼️ СМЕНИТЬ ФОН</button>
+            <input type="file" id="bg-in" hidden accept="image/*">
         </div>
-        <div class="group">
-            <input type="password" id="api-key" placeholder="API Key (remove.bg)" style="width:100%; padding:12px; background:#111; border:1px solid #444; color:#fff; margin-bottom:10px;">
-            <button id="scan-btn" style="background:var(--accent); color:black;">📸 СКАНЕР ГЕРОЕВ</button>
-        </div>
-        <div id="hero-journal"></div>
+        <div id="hero-list"></div>
     </div>
 </div>
 
 <script>
     const $ = id => document.getElementById(id);
 
-    // ТВОЯ ПРЯМАЯ ССЫЛКА НА БАЗУ
+    // ИСПРАВЛЕННЫЙ АДРЕС (us-central1)
     const firebaseConfig = {
         apiKey: "AIzaSyAOdgn7U8MKRbroByVJJXyL2NgQS405M64",
         authDomain: "lesbaza-d8fc9.firebaseapp.com",
         projectId: "lesbaza-d8fc9",
-        databaseURL: "https://lesbaza-d8fc9-default-rtdb.europe-west1.firebasedatabase.app/"
+        databaseURL: "https://lesbaza-d8fc9-default-rtdb.firebaseio.com/" // <- ИСПРАВЛЕНО
     };
 
-    // Инициализация
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const dbRef = database.ref('forest_session');
 
-    // Проверка соединения
     database.ref('.info/connected').on('value', snap => {
         const s = $('db-status');
-        if(s) s.innerText = snap.val() ? "ОК ✅" : "ОШИБКА ❌";
+        if (snap.val() === true) {
+            s.innerText = "СВЯЗЬ: ОК ✅"; s.style.color = "#00ff00";
+        } else {
+            s.innerText = "СВЯЗЬ: ОШИБКА ❌"; s.style.color = "#ff0000";
+        }
     });
 
-    const state = { heroes: [], isRemote: false };
+    let isRemote = false;
+    let heroes = [];
 
-    // Выбор режима
-    $('btn-screen').addEventListener('click', () => {
+    function selectMode(mode) {
         $('mode-selector').style.display = 'none';
-        $('scanner').classList.add('hidden');
-        initApp(false);
-    });
+        isRemote = (mode === 'remote');
+        if (isRemote) {
+            $('scanner').classList.remove('hidden');
+            $('forest').classList.add('hidden');
+            setupRemoteListeners();
+        }
+        setupSync();
+        requestAnimationFrame(animate);
+    }
 
-    $('btn-remote').addEventListener('click', () => {
-        $('mode-selector').style.display = 'none';
-        $('scanner').classList.remove('hidden');
-        $('forest').classList.add('hidden');
-        initApp(true);
-    });
+    function setupRemoteListeners() {
+        $('zoom-range').oninput = (e) => {
+            dbRef.child('world').update({ zoom: parseInt(e.target.value) });
+        };
+        $('bg-in').onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = () => dbRef.child('world').update({ bg: reader.result });
+            reader.readAsDataURL(e.target.files[0]);
+        };
+    }
 
-    function initApp(isRemote) {
-        state.isRemote = isRemote;
-        
-        // Слушаем изменения
+    function setupSync() {
         dbRef.on('value', snap => {
             const data = snap.val() || {};
-            if (data.world) applyWorld(data.world);
-            if (data.heroes) applyHeroes(data.heroes);
-        });
-
-        if (isRemote) {
-            $('zoom-ctrl').oninput = (e) => {
-                dbRef.child('world').update({ zoom: parseInt(e.target.value) });
-            };
-        }
-
-        requestAnimationFrame(updatePhysics);
-    }
-
-    function applyWorld(w) {
-        if (w.zoom) {
-            const s = w.zoom / 100;
-            $('bg-img').style.transform = `scale(${s})`;
-            $('bg-video').style.transform = `scale(${s})`;
-        }
-        if (w.bgSrc && !state.isRemote) {
-            if ($('bg-img').src !== w.bgSrc) $('bg-img').src = w.bgSrc;
-        }
-    }
-
-    function applyHeroes(cloudHeroes) {
-        // Удаление
-        state.heroes.forEach(h => {
-            if (!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; }
-        });
-        state.heroes = state.heroes.filter(h => !h.deleted);
-
-        // Обновление/Создание
-        Object.keys(cloudHeroes).forEach(id => {
-            const d = cloudHeroes[id];
-            let h = state.heroes.find(x => x.id == id);
-            if (!h) {
-                const img = document.createElement('img');
-                img.src = d.src; img.className = 'hero';
-                $('hero-layer').appendChild(img);
-                h = { id, el: img };
-                state.heroes.push(h);
-                if (state.isRemote) createJournalItem(id);
+            if (data.world && !isRemote) {
+                if (data.world.zoom) $('bg-img').style.transform = `scale(${data.world.zoom/100})`;
+                if (data.world.bg) $('bg-img').src = data.world.bg;
             }
-            h.x = d.x; h.y = d.y; h.size = d.size; h.speed = d.speed; h.dx = d.dx;
-            h.el.style.width = h.size + 'px';
+            const cloudHeroes = data.heroes || {};
+            heroes.forEach(h => { if (!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; } });
+            heroes = heroes.filter(h => !h.deleted);
+            Object.keys(cloudHeroes).forEach(id => {
+                let h = heroes.find(x => x.id === id);
+                if (!h) {
+                    const img = document.createElement('img');
+                    img.src = cloudHeroes[id].src;
+                    img.className = 'hero';
+                    document.getElementById('hero-layer').appendChild(img);
+                    h = { id, el: img };
+                    heroes.push(h);
+                }
+                const d = cloudHeroes[id];
+                h.x = d.x; h.y = d.y; h.size = d.size; h.speed = d.speed; h.dx = d.dx;
+                h.el.style.width = h.size + 'px';
+            });
         });
     }
 
-    function createJournalItem(id) {
-        if ($('item-'+id)) return;
-        const div = document.createElement('div');
-        div.className = 'journal-item'; div.id = 'item-'+id;
-        div.innerHTML = `<span>Герой ${id.toString().slice(-4)}</span>
-            <button onclick="firebase.database().ref('forest_session/heroes/${id}').remove()" style="background:#622; float:right; width:40px;">✖</button>`;
-        $('hero-journal').appendChild(div);
-    }
-
-    function updatePhysics() {
-        if (!state.isRemote) {
-            const viewW = $('forest').clientWidth;
-            state.heroes.forEach(h => {
+    function animate() {
+        if (!isRemote) {
+            const vw = $('forest').clientWidth;
+            heroes.forEach(h => {
                 h.x += (h.speed / 10) * h.dx;
-                if (h.x > viewW) h.x = -h.size;
-                if (h.x < -h.size) h.x = viewW;
+                if (h.x > vw) h.x = -h.size;
+                if (h.x < -h.size) h.x = vw;
                 h.el.style.transform = `translate(${h.x}px, ${h.y}px) scaleX(${h.dx > 0 ? -1 : 1})`;
             });
         }
-        requestAnimationFrame(updatePhysics);
+        requestAnimationFrame(animate);
     }
 </script>
 </body>
