@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 10.0 - СИНХРО</title>
+    <title>БАЗА 10.1 - ПОЛНЫЙ КОНТРОЛЬ</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -11,11 +11,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
         
-        /* Выбор режима при старте */
         #mode-selector { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-        .mode-btn { padding: 20px 40px; font-size: 20px; font-weight: bold; border-radius: 15px; border: none; cursor: pointer; transition: 0.3s; width: 280px; }
-        #btn-screen { background: #3d4435; color: white; }
-        #btn-remote { background: var(--accent); color: black; }
+        .mode-btn { padding: 20px 40px; font-size: 20px; font-weight: bold; border-radius: 15px; border: none; cursor: pointer; width: 280px; }
 
         #main-container { display: flex; width: 100vw; height: 100vh; }
         #forest { flex: 1; position: relative; overflow: hidden; }
@@ -27,32 +24,32 @@
         .sway-active { animation: wind-sway 6s ease-in-out infinite; }
         #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 
-        /* ПАНЕЛЬ УПРАВЛЕНИЯ */
         #scanner { width: 350px; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; border-left: 2px solid #2d3326; }
         .hidden { display: none !important; }
 
-        .camera-box { position: relative; width: 100%; max-width: 180px; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 2px solid #444; margin: 0 auto 10px; background: #111; }
+        .camera-box { position: relative; width: 140px; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 2px solid #444; margin: 0 auto 10px; background: #111; }
         video#camera-feed { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
         
         .group { background: #22261d; padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; background: #3d4435; color: white; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; }
-        .hero { position: absolute; will-change: transform; transition: opacity 0.5s; }
-        .journal-item { background: #151812; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #444; font-size: 12px; }
+        .group-title { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 8px; }
+        label { font-size: 10px; color: #666; display: block; margin-top: 10px; }
+        button { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; background: #3d4435; color: white; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); }
+        .hero { position: absolute; will-change: transform; }
+        .journal-item { background: #151812; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #444; }
     </style>
 </head>
 <body>
 
 <div id="mode-selector">
-    <h2 style="margin-bottom: 10px;">БАЗА 10.0: КТО Я?</h2>
-    <button id="btn-screen" class="mode-btn">💻 РЕЖИМ ЭКРАНА</button>
-    <button id="btn-remote" class="mode-btn">📱 РЕЖИМ ПУЛЬТА</button>
+    <button id="btn-screen" class="mode-btn" style="background:#3d4435; color:white;">💻 РЕЖИМ ЭКРАНА</button>
+    <button id="btn-remote" class="mode-btn" style="background:var(--accent); color:black;">📱 РЕЖИМ ПУЛЬТА</button>
 </div>
 
 <div id="main-container">
     <div id="forest">
         <div id="bg-media-container" class="sway-active" style="--wind-power: 2deg;">
-            <img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80">
+            <img id="bg-img" src="">
             <video id="bg-video" loop muted playsinline></video>
         </div>
         <audio id="bg-audio" loop></audio>
@@ -61,12 +58,25 @@
 
     <div id="scanner" class="hidden">
         <div class="camera-box"><video id="camera-feed" autoplay playsinline></video></div>
+        
         <div class="group">
-            <button onclick="$('hero-in').click()">📂 ЗАГРУЗИТЬ ГЕРОЯ</button>
-            <input type="file" id="hero-in" hidden accept="image/*">
-            <input type="password" id="api-key" placeholder="API Key" style="width:100%; padding:8px; margin-top:10px; background:#111; color:#fff; border:1px solid #444;">
-            <button id="scan-btn" style="background:var(--accent); color:black;">✨ ОЖИВИТЬ РИСУНОК</button>
+            <div class="group-title">Управление фоном</div>
+            <button onclick="$('bg-in').click()">🖼️ СМЕНИТЬ ФОН</button>
+            <input type="file" id="bg-in" hidden accept="image/*,video/*">
+            <label>ЗУМ ФОНА:</label>
+            <input type="range" id="bg-zoom" min="50" max="250" value="100" oninput="updateWorld('zoom', this.value)">
+            <label>СИЛА ВЕТРА:</label>
+            <input type="range" id="wind-in" min="0" max="15" value="2" oninput="updateWorld('wind', this.value)">
         </div>
+
+        <div class="group">
+            <div class="group-title">Герой</div>
+            <input type="password" id="api-key" placeholder="API Key" style="width:100%; padding:8px; background:#111; color:#fff; border:1px solid #444; margin-bottom:5px;">
+            <button id="scan-btn" style="background:var(--accent); color:black;">✨ ОЖИВИТЬ РИСУНОК</button>
+            <button onclick="$('hero-in').click()">📂 ЗАГРУЗИТЬ ФАЙЛ</button>
+            <input type="file" id="hero-in" hidden accept="image/*">
+        </div>
+
         <div id="hero-journal"></div>
     </div>
 </div>
@@ -76,7 +86,6 @@
 <script>
     const $ = id => document.getElementById(id);
     
-    // --- ИНИЦИАЛИЗАЦИЯ FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyAOdgn7U8MKRbroByVJJXyL2NgQS405M64",
         authDomain: "lesbaza-d8fc9.firebaseapp.com",
@@ -91,7 +100,6 @@
 
     const state = { heroes: [], isRemote: false };
 
-    // --- ВЫБОР РЕЖИМА ---
     $('btn-screen').onclick = () => { $('mode-selector').remove(); startApp(false); };
     $('btn-remote').onclick = () => { $('mode-selector').remove(); $('scanner').classList.remove('hidden'); startApp(true); };
 
@@ -99,54 +107,70 @@
         state.isRemote = remote;
         if(remote) initCamera();
         
-        // Слушаем изменения в базе
-        db.on('value', snapshot => {
-            const data = snapshot.val();
-            if(!data) return;
-            if(data.heroes) syncHeroes(data.heroes);
+        db.on('value', snap => {
+            const data = snap.val() || {};
+            if(data.world) syncWorld(data.world);
+            syncHeroes(data.heroes || {});
         });
-
         requestAnimationFrame(animate);
     }
 
-    async function initCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            $('camera-feed').srcObject = stream;
-        } catch (e) { console.log("Камера не найдена"); }
+    function syncWorld(w) {
+        if(w.zoom) {
+            const s = w.zoom / 100;
+            $('bg-img').style.transform = `scale(${s})`;
+            $('bg-video').style.transform = `scale(${s})`;
+        }
+        if(w.wind) $('bg-media-container').style.setProperty('--wind-power', w.wind + 'deg');
+        if(w.bgSrc && $('bg-img').src !== w.bgSrc) {
+            if(w.isVid) {
+                $('bg-img').style.display='none'; $('bg-video').style.display='block';
+                $('bg-video').src = w.bgSrc; $('bg-video').play();
+            } else {
+                $('bg-video').style.display='none'; $('bg-img').style.display='block';
+                $('bg-img').src = w.bgSrc;
+            }
+        }
     }
 
-    // --- СИНХРОНИЗАЦИЯ ГЕРОЕВ ---
+    function updateWorld(field, val) { db.child('world').update({ [field]: val }); }
+
+    $('bg-in').onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            db.child('world').update({ bgSrc: reader.result, isVid: file.type.startsWith('video') });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    async function initCamera() {
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        $('camera-feed').srcObject = s;
+    }
+
     function syncHeroes(cloudHeroes) {
-        // Удаляем тех, кого нет в облаке
-        state.heroes.forEach(h => {
-            if(!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; }
-        });
+        state.heroes.forEach(h => { if(!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; } });
         state.heroes = state.heroes.filter(h => !h.deleted);
 
-        // Добавляем новых или обновляем
         Object.keys(cloudHeroes).forEach(id => {
-            const data = cloudHeroes[id];
+            const d = cloudHeroes[id];
             let h = state.heroes.find(x => x.id == id);
-            
             if(!h) {
                 const img = document.createElement('img');
-                img.src = data.src; img.className = 'hero';
+                img.src = d.src; img.className = 'hero';
                 $('hero-layer').appendChild(img);
                 h = { id, el: img, angle: Math.random()*5 };
                 state.heroes.push(h);
                 if(state.isRemote) addJournalItem(id);
             }
-            // Обновляем параметры из облака
-            h.x = data.x; h.y = data.y; h.size = data.size; h.speed = data.speed; h.dx = data.dx;
+            h.x = d.x; h.y = d.y; h.size = d.size; h.speed = d.speed; h.dx = d.dx;
             h.el.style.width = h.size + 'px';
         });
     }
 
-    // --- УПРАВЛЕНИЕ (ДЛЯ ПУЛЬТА) ---
     $('scan-btn').onclick = async () => {
         const key = $('api-key').value;
-        if(!key) return alert("Нужен API Key!");
         const canv = $('proc-canvas'); const ctx = canv.getContext('2d'); const v = $('camera-feed');
         canv.width = 500; canv.height = 500;
         ctx.drawImage(v, 0, 0, 500, 500);
@@ -154,44 +178,31 @@
             const fd = new FormData(); fd.append('image_file', blob);
             const res = await fetch('https://api.remove.bg/v1.0/removebg', { method: 'POST', headers: { 'X-Api-Key': key }, body: fd });
             if(res.ok) {
-                const reader = new FileReader();
-                reader.readAsDataURL(await res.blob());
-                reader.onloadend = () => uploadHero(reader.result);
+                const r = new FileReader(); r.readAsDataURL(await res.blob());
+                r.onloadend = () => db.child('heroes').child(Date.now()).set({src: r.result, x: 100, y: 350, size: 120, speed: 10, dx: 1});
             }
         });
     };
 
     $('hero-in').onchange = e => {
-        const reader = new FileReader();
-        reader.onload = () => uploadHero(reader.result);
-        reader.readAsDataURL(e.target.files[0]);
+        const r = new FileReader();
+        r.onload = () => db.child('heroes').child(Date.now()).set({src: r.result, x: 100, y: 350, size: 120, speed: 10, dx: 1});
+        r.readAsDataURL(e.target.files[0]);
     };
-
-    function uploadHero(base64) {
-        const id = Date.now();
-        db.child('heroes').child(id).set({
-            src: base64, x: 100, y: 300, size: 120, speed: 10, dx: 1
-        });
-    }
 
     function addJournalItem(id) {
         if($('item-'+id)) return;
         const div = document.createElement('div');
         div.className = 'journal-item'; div.id = 'item-'+id;
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between"><span>Герой ${id.toString().slice(-4)}</span><button onclick="deleteHero(${id})" style="width:30px; margin:0">✖</button></div>
-            Размер: <input type="range" min="40" max="400" value="120" onchange="updateCloud(${id}, 'size', this.value)">
-            Скорость: <input type="range" min="0" max="50" value="10" onchange="updateCloud(${id}, 'speed', this.value)">`;
+        div.innerHTML = `<div style="display:flex; justify-content:space-between; font-size:10px"><span>ГЕРОЙ ${id.toString().slice(-4)}</span><button onclick="db.child('heroes').child(${id}).remove()" style="width:25px; margin:0; padding:2px">✖</button></div>
+            <input type="range" min="40" max="400" value="120" onchange="db.child('heroes').child(${id}).update({size: parseInt(this.value)})">
+            <input type="range" min="0" max="50" value="10" onchange="db.child('heroes').child(${id}).update({speed: parseInt(this.value)})">`;
         $('hero-journal').appendChild(div);
     }
 
-    window.updateCloud = (id, field, val) => db.child('heroes').child(id).update({ [field]: parseInt(val) });
-    window.deleteHero = id => { db.child('heroes').child(id).remove(); $('item-'+id).remove(); };
-
-    // --- АНИМАЦИЯ (ДЛЯ ЭКРАНА) ---
     function animate() {
         const viewW = $('forest').clientWidth;
-        if(!state.isRemote && state.heroes.length > 0) {
+        if(!state.isRemote) {
             state.heroes.forEach(h => {
                 h.x += (h.speed / 10) * h.dx;
                 if(h.x > viewW) h.x = -h.size;
