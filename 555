@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>БАЗА 9.2 - БЕСКОНЕЧНЫЙ ЛЕС</title>
+    <style>
+        :root { --accent: #ff9d00; --bg: #0e120a; --panel: #1a1d16; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: sans-serif; color: #e0e0e0; }
+        
+        #main-container { display: flex; flex-direction: column; width: 100vw; height: 100vh; }
+        @media (min-width: 768px) { #main-container { flex-direction: row; } }
+
+        /* ИГРОВАЯ ЗОНА */
+        #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
+        
+        #bg-media-container { 
+            position: absolute; width: 100%; height: 100%;
+            z-index: 1; display: flex; align-items: center; justify-content: center; 
+            transform-origin: bottom center; will-change: transform;
+        }
+        #bg-img, #bg-video { 
+            width: 100%; height: 100%; object-fit: contain; 
+            display: block; transition: transform 0.1s; 
+        }
+        #bg-video { display: none; }
+
+        @keyframes wind-sway {
+            0%, 100% { transform: skewX(0deg); }
+            50% { transform: skewX(var(--wind-power, 2deg)); }
+        }
+        .sway-active { animation: wind-sway 6s ease-in-out infinite; }
+        #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+
+        /* ПАНЕЛЬ УПРАВЛЕНИЯ */
+        #scanner { width: 100%; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; border-left: 2px solid #2d3326; }
+        @media (min-width: 768px) { #scanner { width: 350px; } }
+
+        .camera-box { position: relative; width: 140px; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 2px solid #444; margin: 0 auto 10px; background: #111; }
+        video#camera-feed { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        
+        #status-bar { background: rgba(255, 157, 0, 0.1); color: var(--accent); padding: 8px; border-radius: 6px; font-size: 11px; text-align: center; margin-bottom: 10px; display: none; border: 1px solid var(--accent); }
+        .group { background: #22261d; padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
+        .group-title { font-size: 10px; text-transform: uppercase; color: #777; margin-bottom: 8px; font-weight: bold; }
+        
+        button { width: 100%; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; background: #3d4435; color: white; font-size: 12px; }
+        #scan-btn { background: var(--accent) !important; color: #000 !important; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; }
+        
+        .journal-item { background: #151812; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #333; }
+        .hero { position: absolute; left: 0; top: 0; will-change: transform; }
+    </style>
+</head>
+<body>
+
+<div id="main-container">
+    <div id="forest">
+        <div id="bg-media-container" class="sway-active" style="--wind-power: 2deg;">
+            <img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80">
+            <video id="bg-video" loop muted playsinline></video>
+        </div>
+        <audio id="bg-audio" loop></audio>
+        <div id="hero-layer"></div>
+    </div>
+
+    <div id="scanner">
+        <div class="camera-box">
+            <video id="camera-feed" autoplay playsinline></video>
+        </div>
+        <div id="status-bar"></div>
+
+        <div class="group">
+            <div class="group-title">Фон / Зум / Ветер</div>
+            <button onclick="$('bg-in').click()">🖼️ СМЕНИТЬ ФОН</button>
+            <input type="file" id="bg-in" hidden accept="image/*,video/*">
+            <input type="range" id="bg-zoom" min="50" max="250" value="100">
+            <input type="range" id="wind-in" min="0" max="15" value="2">
+        </div>
+
+        <div class="group">
+            <div class="group-title">Звук</div>
+            <button onclick="$('aud-in').click()">🎵 ЗАГРУЗИТЬ MP3</button>
+            <input type="file" id="aud-in" hidden accept="audio/*">
+            <input type="range" id="vol-ctrl" min="0" max="1" step="0.1" value="0.5">
+        </div>
+
+        <div class="group">
+            <div class="group-title">Герой</div>
+            <input type="password" id="api-key" placeholder="API Key" style="width:100%; padding:8px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;">
+            <button id="scan-btn">✨ ОЖИВИТЬ РИСУНОК</button>
+            <button onclick="$('hero-in').click()">📂 ЗАГРУЗИТЬ ФАЙЛ</button>
+            <input type="file" id="hero-in" hidden accept="image/*">
+        </div>
+
+        <div id="hero-journal"></div>
+    </div>
+</div>
+
+<canvas id="proc-canvas" style="display:none"></canvas>
+
+<script>
+    const $ = id => document.getElementById(id);
+    const state = { heroes: [] };
+
+    function setStatus(m) {
+        $('status-bar').innerText = m;
+        $('status-bar').style.display = 'block';
+        setTimeout(() => $('status-bar').style.display = 'none', 3000);
+    }
+
+    async function init() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            $('camera-feed').srcObject = stream;
+        } catch (e) { console.log("Камера оффлайн"); }
+        requestAnimationFrame(animate);
+    }
+
+    // --- ФОН ---
+    $('bg-zoom').oninput = e => {
+        const s = e.target.value / 100;
+        $('bg-img').style.transform = `scale(${s})`;
+        $('bg-video').style.transform = `scale(${s})`;
+    };
+    $('bg-in').onchange = e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const url = URL.createObjectURL(file);
+        if(file.type.startsWith('video')) {
+            $('bg-img').style.display = 'none';
+            $('bg-video').style.display = 'block'; $('bg-video').src = url; $('bg-video').play();
+            $('bg-media-container').classList.remove('sway-active');
+        } else {
+            $('bg-video').style.display = 'none';
+            $('bg-img').style.display = 'block'; $('bg-img').src = url;
+            $('bg-media-container').classList.add('sway-active');
+        }
+    };
+    $('wind-in').oninput = e => $('bg-media-container').style.setProperty('--wind-power', e.target.value + 'deg');
+    $('aud-in').onchange = e => { if(e.target.files[0]) { $('bg-audio').src = URL.createObjectURL(e.target.files[0]); $('bg-audio').play(); } };
+    $('vol-ctrl').oninput = e => $('bg-audio').volume = e.target.value;
+
+    // --- ГЕРОИ ---
+    $('scan-btn').onclick = async () => {
+        const key = $('api-key').value;
+        if(!key) return alert("Введите API Key");
+        setStatus("📸 Оживляю...");
+        const canv = $('proc-canvas'); const ctx = canv.getContext('2d'); const v = $('camera-feed');
+        canv.width = 600; canv.height = 600;
+        const side = Math.min(v.videoWidth, v.videoHeight) * 0.7;
+        ctx.drawImage(v, (v.videoWidth-side)/2, (v.videoHeight-side)/2, side, side, 0, 0, 600, 600);
+        canv.toBlob(async blob => {
+            const fd = new FormData(); fd.append('image_file', blob);
+            try {
+                const res = await fetch('https://api.remove.bg/v1.0/removebg', { method: 'POST', headers: { 'X-Api-Key': key }, body: fd });
+                if(res.ok) addHero(URL.createObjectURL(await res.blob()));
+                else setStatus("❌ Ошибка API");
+            } catch(e) { setStatus("❌ Ошибка сети"); }
+        });
+    };
+    $('hero-in').onchange = e => e.target.files[0] && addHero(URL.createObjectURL(e.target.files[0]));
+
+    function addHero(src) {
+        const id = Date.now();
+        const img = document.createElement('img');
+        img.src = src; img.className = 'hero'; img.style.width = '120px';
+        $('hero-layer').appendChild(img);
+        
+        // Появление в центре
+        const startX = $('forest').clientWidth / 2 - 60;
+        const startY = $('forest').clientHeight * 0.65;
+
+        state.heroes.push({ id, el: img, x: startX, y: startY, dx: (Math.random() > 0.5 ? 1 : -1), size: 120, speed: 10, angle: Math.random()*5 });
+        
+        const div = document.createElement('div');
+        div.className = 'journal-item';
+        div.id = 'item-'+id;
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; font-size:11px"><span>Герой #${id.toString().slice(-4)}</span><button onclick="delHero(${id})" style="width:25px; margin:0">✖</button></div>
+            <label>Размер:</label><input type="range" min="40" max="400" value="120" oninput="updateH(${id},'size',this.value)">
+            <label>Скорость:</label><input type="range" min="0" max="50" value="10" oninput="updateH(${id},'speed',this.value)">`;
+        $('hero-journal').appendChild(div);
+    }
+
+    window.updateH = (id, t, v) => {
+        const h = state.heroes.find(x => x.id === id);
+        if(!h) return;
+        if(t === 'size') { h.size = parseInt(v); h.el.style.width = v + 'px'; }
+        if(t === 'speed') h.speed = parseInt(v);
+    };
+    window.delHero = id => {
+        const i = state.heroes.findIndex(x => x.id === id);
+        if(i > -1) { state.heroes[i].el.remove(); state.heroes.splice(i, 1); $('item-'+id).remove(); }
+    };
+
+    function animate() {
+        const viewW = $('forest').clientWidth;
+        const viewH = $('forest').clientHeight;
+
+        state.heroes.forEach(h => {
+            const moveStep = (h.speed / 10) * h.dx;
+            h.x += moveStep;
+            h.y += Math.sin(h.angle) * 0.3;
+            h.angle += 0.05;
+
+            // УХОД ЗА КАДР И ТЕЛЕПОРТАЦИЯ (Влево/Вправо)
+            const margin = h.size + 50; 
+            if (h.x > viewW) h.x = -h.size; 
+            if (h.x < -h.size) h.x = viewW;
+            
+            // ОГРАНИЧЕНИЕ ПО ЗЕМЛЕ (Ниже земли уходить нельзя)
+            const groundLine = viewH * 0.85; // 85% высоты экрана — предел земли
+            const limitY = groundLine - h.size;
+            if (h.y > limitY) h.y = limitY;
+            if (h.y < viewH * 0.1) h.y = viewH * 0.1;
+
+            h.el.style.transform = `translate(${h.x}px, ${h.y}px) scaleX(${h.dx > 0 ? -1 : 1})`;
+        });
+        requestAnimationFrame(animate);
+    }
+
+    init();
+</script>
+</body>
+</html>
