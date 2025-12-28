@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 10.3 - ТОЧНЫЙ КОННЕКТ</title>
+    <title>БАЗА 10.5 - СВЯЗЬ УСТАНОВЛЕНА</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -11,27 +11,28 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
         
-        #mode-selector { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-        .mode-btn { padding: 20px 40px; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; width: 280px; }
+        #mode-selector { 
+            position: fixed; inset: 0; z-index: 10000; 
+            background: #0e120a; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; gap: 25px; 
+        }
+        .mode-btn { 
+            padding: 25px 50px; font-size: 22px; font-weight: bold; 
+            border-radius: 15px; border: none; cursor: pointer; width: 320px;
+        }
 
-        #main-container { display: flex; width: 100vw; height: 100vh; flex-direction: column; }
-        @media (min-width: 768px) { #main-container { flex-direction: row; } }
-
-        #forest { flex: 1; position: relative; overflow: hidden; background: #050505; }
+        #main-container { display: flex; width: 100vw; height: 100vh; }
+        #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
         #bg-media-container { position: absolute; width: 100%; height: 100%; z-index: 1; display: flex; align-items: center; justify-content: center; transform-origin: bottom center; }
-        #bg-img, #bg-video { width: 100%; height: 100%; object-fit: contain; transition: transform 0.1s; display: block; }
+        #bg-img, #bg-video { width: 100%; height: 100%; object-fit: contain; transition: transform 0.2s; }
 
-        @keyframes wind-sway { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(var(--wind-power, 2deg)); } }
-        .sway-active { animation: wind-sway 6s ease-in-out infinite; }
         #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 
-        #scanner { width: 100%; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; }
-        @media (min-width: 768px) { #scanner { width: 350px; border-left: 2px solid #2d3326; } }
-        
+        #scanner { width: 100%; max-width: 350px; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; border-left: 2px solid #2d3326; }
         .hidden { display: none !important; }
-        .group { background: #22261d; padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 5px; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); }
+        .group { background: #22261d; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
+        button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 8px; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); margin: 10px 0; }
         .hero { position: absolute; will-change: transform; }
         .journal-item { background: #151812; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #444; }
     </style>
@@ -39,13 +40,14 @@
 <body>
 
 <div id="mode-selector">
-    <button id="btn-screen" class="mode-btn" style="background:#3d4435; color:white;">💻 РЕЖИМ ЭКРАНА (ПРОЕКТОР)</button>
-    <button id="btn-remote" class="mode-btn" style="background:var(--accent); color:black;">📱 РЕЖИМ ПУЛЬТА (ТЕЛЕФОН)</button>
+    <h1 style="color:var(--accent); margin-bottom:10px;">БАЗА 10.5</h1>
+    <button id="btn-screen" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН (ПРОЕКТОР)</button>
+    <button id="btn-remote" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ (ТЕЛЕФОН)</button>
 </div>
 
 <div id="main-container">
     <div id="forest">
-        <div id="bg-media-container" class="sway-active">
+        <div id="bg-media-container">
             <img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80">
             <video id="bg-video" loop muted playsinline style="display:none;"></video>
         </div>
@@ -54,17 +56,15 @@
 
     <div id="scanner" class="hidden">
         <div class="group">
-            <div style="font-size:10px; color:var(--accent); margin-bottom:10px;">СТАТУС: <span id="db-status">ПОДКЛЮЧЕНИЕ...</span></div>
-            <button onclick="$('bg-in').click()">🖼️ ВЫБРАТЬ НОВЫЙ ФОН</button>
+            <div style="font-size:12px; color:var(--accent); font-weight:bold;">СЕТЬ: <span id="db-status">ПРОВЕРКА...</span></div>
+            <button onclick="$('bg-in').click()">🖼️ СМЕНИТЬ ФОН</button>
             <input type="file" id="bg-in" hidden accept="image/*,video/*">
-            <label style="font-size:10px; display:block; margin-top:10px;">ЗУМ:</label>
-            <input type="range" min="50" max="250" value="100" oninput="sendWorld('zoom', this.value)">
-            <label style="font-size:10px; display:block; margin-top:10px;">ВЕТЕР:</label>
-            <input type="range" min="0" max="15" value="2" oninput="sendWorld('wind', this.value)">
+            <label style="font-size:11px; display:block; margin-top:15px;">МАСШТАБ:</label>
+            <input type="range" id="zoom-ctrl" min="50" max="250" value="100">
         </div>
         <div class="group">
-            <input type="password" id="api-key" placeholder="API Key" style="width:100%; padding:10px; background:#111; border:1px solid #444; color:#fff; margin-bottom:5px;">
-            <button id="scan-btn" style="background:var(--accent); color:black;">✨ ОЖИВИТЬ С КАМЕРЫ</button>
+            <input type="password" id="api-key" placeholder="API Key (remove.bg)" style="width:100%; padding:12px; background:#111; border:1px solid #444; color:#fff; margin-bottom:10px;">
+            <button id="scan-btn" style="background:var(--accent); color:black;">📸 СКАНЕР ГЕРОЕВ</button>
         </div>
         <div id="hero-journal"></div>
     </div>
@@ -73,107 +73,115 @@
 <script>
     const $ = id => document.getElementById(id);
 
-    // !!! ВСТАВЬ СЮДА СВОЙ URL ИЗ FIREBASE !!!
-    const DB_URL = "https://console.firebase.google.com/u/0/project/lesbaza-d8fc9/database/lesbaza-d8fc9-default-rtdb/data/~2F";
-
+    // ТВОЯ ПРЯМАЯ ССЫЛКА НА БАЗУ
     const firebaseConfig = {
         apiKey: "AIzaSyAOdgn7U8MKRbroByVJJXyL2NgQS405M64",
         authDomain: "lesbaza-d8fc9.firebaseapp.com",
         projectId: "lesbaza-d8fc9",
-        databaseURL: DB_URL
+        databaseURL: "https://lesbaza-d8fc9-default-rtdb.europe-west1.firebasedatabase.app/"
     };
 
+    // Инициализация
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('forest_session');
+    const database = firebase.database();
+    const dbRef = database.ref('forest_session');
 
-    // Проверка связи
-    firebase.database().ref('.info/connected').on('value', snap => {
-        $('db-status').innerText = snap.val() ? "СЕТЬ OK ✅" : "ОФФЛАЙН ❌";
+    // Проверка соединения
+    database.ref('.info/connected').on('value', snap => {
+        const s = $('db-status');
+        if(s) s.innerText = snap.val() ? "ОК ✅" : "ОШИБКА ❌";
     });
 
     const state = { heroes: [], isRemote: false };
 
-    $('btn-screen').onclick = () => { $('mode-selector').remove(); startApp(false); };
-    $('btn-remote').onclick = () => { $('mode-selector').remove(); $('scanner').classList.remove('hidden'); $('forest').classList.add('hidden'); startApp(true); };
+    // Выбор режима
+    $('btn-screen').addEventListener('click', () => {
+        $('mode-selector').style.display = 'none';
+        $('scanner').classList.add('hidden');
+        initApp(false);
+    });
 
-    function startApp(remote) {
-        state.isRemote = remote;
-        db.on('value', snap => {
+    $('btn-remote').addEventListener('click', () => {
+        $('mode-selector').style.display = 'none';
+        $('scanner').classList.remove('hidden');
+        $('forest').classList.add('hidden');
+        initApp(true);
+    });
+
+    function initApp(isRemote) {
+        state.isRemote = isRemote;
+        
+        // Слушаем изменения
+        dbRef.on('value', snap => {
             const data = snap.val() || {};
-            if(data.world) updateVisuals(data.world);
-            if(data.heroes) updateHeroes(data.heroes);
+            if (data.world) applyWorld(data.world);
+            if (data.heroes) applyHeroes(data.heroes);
         });
-        requestAnimationFrame(animate);
+
+        if (isRemote) {
+            $('zoom-ctrl').oninput = (e) => {
+                dbRef.child('world').update({ zoom: parseInt(e.target.value) });
+            };
+        }
+
+        requestAnimationFrame(updatePhysics);
     }
 
-    function sendWorld(field, val) { db.child('world').update({ [field]: parseInt(val) }); }
-
-    function updateVisuals(w) {
-        if(w.zoom) {
+    function applyWorld(w) {
+        if (w.zoom) {
             const s = w.zoom / 100;
             $('bg-img').style.transform = `scale(${s})`;
             $('bg-video').style.transform = `scale(${s})`;
         }
-        if(w.wind !== undefined) $('bg-media-container').style.setProperty('--wind-power', w.wind + 'deg');
-        if(w.bgSrc && !state.isRemote && $('bg-img').src !== w.bgSrc) {
-            if(w.isVid) {
-                $('bg-img').style.display='none'; $('bg-video').style.display='block';
-                $('bg-video').src = w.bgSrc; $('bg-video').play();
-            } else {
-                $('bg-video').style.display='none'; $('bg-img').style.display='block';
-                $('bg-img').src = w.bgSrc;
-            }
+        if (w.bgSrc && !state.isRemote) {
+            if ($('bg-img').src !== w.bgSrc) $('bg-img').src = w.bgSrc;
         }
     }
 
-    $('bg-in').onchange = e => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = () => db.child('world').update({ bgSrc: reader.result, isVid: file.type.startsWith('video') });
-        reader.readAsDataURL(file);
-    };
-
-    function updateHeroes(cloudHeroes) {
-        state.heroes.forEach(h => { if(!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; } });
+    function applyHeroes(cloudHeroes) {
+        // Удаление
+        state.heroes.forEach(h => {
+            if (!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; }
+        });
         state.heroes = state.heroes.filter(h => !h.deleted);
 
+        // Обновление/Создание
         Object.keys(cloudHeroes).forEach(id => {
             const d = cloudHeroes[id];
             let h = state.heroes.find(x => x.id == id);
-            if(!h) {
+            if (!h) {
                 const img = document.createElement('img');
                 img.src = d.src; img.className = 'hero';
                 $('hero-layer').appendChild(img);
                 h = { id, el: img };
                 state.heroes.push(h);
-                if(state.isRemote) addJournal(id);
+                if (state.isRemote) createJournalItem(id);
             }
             h.x = d.x; h.y = d.y; h.size = d.size; h.speed = d.speed; h.dx = d.dx;
             h.el.style.width = h.size + 'px';
         });
     }
 
-    function addJournal(id) {
-        if($('item-'+id)) return;
+    function createJournalItem(id) {
+        if ($('item-'+id)) return;
         const div = document.createElement('div');
         div.className = 'journal-item'; div.id = 'item-'+id;
-        div.innerHTML = `<span style="font-size:10px">ГЕРОЙ ${id.toString().slice(-4)}</span>
-            <button onclick="db.child('heroes').child(${id}).remove()" style="background:#622; float:right; width:40px;">✖</button>
-            <input type="range" min="40" max="400" value="120" onchange="db.child('heroes').child(${id}).update({size:parseInt(this.value)})">`;
+        div.innerHTML = `<span>Герой ${id.toString().slice(-4)}</span>
+            <button onclick="firebase.database().ref('forest_session/heroes/${id}').remove()" style="background:#622; float:right; width:40px;">✖</button>`;
         $('hero-journal').appendChild(div);
     }
 
-    function animate() {
-        if(!state.isRemote) {
+    function updatePhysics() {
+        if (!state.isRemote) {
             const viewW = $('forest').clientWidth;
             state.heroes.forEach(h => {
                 h.x += (h.speed / 10) * h.dx;
-                if(h.x > viewW) h.x = -h.size;
-                if(h.x < -h.size) h.x = viewW;
+                if (h.x > viewW) h.x = -h.size;
+                if (h.x < -h.size) h.x = viewW;
                 h.el.style.transform = `translate(${h.x}px, ${h.y}px) scaleX(${h.dx > 0 ? -1 : 1})`;
             });
         }
-        requestAnimationFrame(animate);
+        requestAnimationFrame(updatePhysics);
     }
 </script>
 </body>
