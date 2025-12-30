@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 11.2 - HERO EDITOR</title>
+    <title>БАЗА 11.3 - AI STATUS</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -15,7 +15,7 @@
         .mode-btn { padding: 20px; font-size: 20px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; width: 280px; }
 
         #main-container { display: flex; width: 100vw; height: 100vh; position: relative; }
-        #forest { flex: 1; position: relative; overflow: hidden; background: #000; width: 100%; height: 100%; }
+        #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
         #bg-media-container { position: absolute; width: 100%; height: 100%; z-index: 1; display: flex; align-items: center; justify-content: center; }
         #bg-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
         #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
@@ -38,11 +38,11 @@
         }
 
         .group { background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
-        h4 { font-size: 10px; color: var(--accent); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        h4 { font-size: 10px; color: var(--accent); margin-bottom: 8px; text-transform: uppercase; }
         button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 5px; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; }
+        button:disabled { background: #222; color: #555; cursor: not-allowed; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); }
         
-        /* КАРТОЧКА ГЕРОЯ */
         .hero-card { background: #2a2d26; border-radius: 8px; padding: 10px; margin-top: 10px; border-left: 3px solid var(--accent); }
         .hero-card label { font-size: 9px; display: block; margin-top: 5px; opacity: 0.7; }
         
@@ -55,7 +55,7 @@
 <body>
 
 <div id="mode-selector">
-    <h2 style="color:var(--accent)">БАЗА 11.2</h2>
+    <h2 style="color:var(--accent)">БАЗА 11.3</h2>
     <button onclick="selectMode('screen')" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН</button>
     <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ</button>
 </div>
@@ -87,8 +87,8 @@
 
         <div class="group">
             <h4>👾 Новый герой</h4>
-            <input type="password" id="api-key" placeholder="remove.bg key" style="width:100%; padding:8px; background:#000; border:1px solid #444; color:#fff; margin-bottom:5px; border-radius:4px; font-size:11px;">
-            <button onclick="$('hero-in').click()" style="background: var(--accent); color: black;">📸 Снять</button>
+            <input type="text" id="api-key" placeholder="remove.bg key" style="width:100%; padding:8px; background:#000; border:1px solid #444; color:#fff; margin-bottom:5px; border-radius:4px; font-size:11px;">
+            <button id="ai-btn" onclick="$('hero-in').click()" style="background: var(--accent); color: black;">📸 Сфотографировать</button>
             <input type="file" id="hero-in" hidden accept="image/*" capture="camera" onchange="processHero(this.files[0])">
         </div>
         
@@ -132,24 +132,52 @@
     async function processHero(file) {
         if (!file) return;
         const key = $('api-key').value;
+        const btn = $('ai-btn');
         let imgData = "";
-        if (key) {
-            const formData = new FormData();
-            formData.append('image_file', file);
-            const res = await fetch('https://api.remove.bg/v1.1/removebg', {
-                method: 'POST', headers: { 'X-Api-Key': key }, body: formData
-            });
-            if (res.ok) {
-                const blob = await res.blob();
-                imgData = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
-            }
-        }
-        if (!imgData) imgData = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(file); });
 
-        const id = 'h' + Date.now();
-        dbRef.child('heroes').child(id).set({
-            src: imgData, x: 50, y: Math.random()*300+100, size: 150, speed: 10, dx: 1
-        });
+        btn.disabled = true;
+        btn.innerText = "⏳ ВЫРЕЗАЮ ФОН...";
+
+        try {
+            if (key) {
+                const formData = new FormData();
+                formData.append('image_file', file);
+                const res = await fetch('https://api.remove.bg/v1.1/removebg', {
+                    method: 'POST', headers: { 'X-Api-Key': key }, body: formData
+                });
+                
+                if (res.ok) {
+                    const blob = await res.blob();
+                    imgData = await new Promise(r => { 
+                        const rd = new FileReader(); 
+                        rd.onload = () => r(rd.result); 
+                        rd.readAsDataURL(blob); 
+                    });
+                } else {
+                    const err = await res.json();
+                    alert("Ошибка ИИ: " + (err.errors[0].title || "Проверьте ключ"));
+                }
+            }
+            
+            if (!imgData) {
+                imgData = await new Promise(r => { 
+                    const rd = new FileReader(); 
+                    rd.onload = () => r(rd.result); 
+                    rd.readAsDataURL(file); 
+                });
+            }
+
+            const id = 'h' + Date.now();
+            await dbRef.child('heroes').child(id).set({
+                src: imgData, x: 50, y: Math.random()*300+100, size: 150, speed: 10, dx: 1
+            });
+
+        } catch (e) {
+            alert("Ошибка загрузки. Проверьте интернет.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "📸 Сфотографировать";
+        }
     }
 
     function upload(file, type) {
@@ -170,7 +198,6 @@
             }
             
             const cloud = d.heroes || {};
-            // РЕДАКТОР ГЕРОЕВ
             $('hero-editor-list').innerHTML = Object.keys(cloud).map(id => `
                 <div class="hero-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
