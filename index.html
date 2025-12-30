@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 10.8 - FULL CONTROL</title>
+    <title>БАЗА 10.9 - SAFARI READY</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         :root { --accent: #ff9d00; --bg: #0e120a; --panel: #1a1d16; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; -webkit-tap-highlight-color: transparent; }
         
         #mode-selector { position: fixed; inset: 0; z-index: 10000; background: #0e120a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
         .mode-btn { padding: 20px; font-size: 20px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; width: 280px; }
@@ -17,63 +17,56 @@
         #main-container { display: flex; width: 100vw; height: 100vh; }
         #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
         #bg-media-container { position: absolute; width: 100%; height: 100%; z-index: 1; display: flex; align-items: center; justify-content: center; transform-origin: bottom center; }
-        #bg-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
-        #hero-layer { position: absolute; inset: 0; z-index: 2; }
+        #bg-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 
-        #scanner { width: 100%; max-width: 350px; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; border-left: 2px solid #2d3326; }
+        #scanner { width: 100%; max-width: 350px; background: var(--panel); display: flex; flex-direction: column; padding: 15px; z-index: 10; overflow-y: auto; border-left: 1px solid #333; }
         .hidden { display: none !important; }
         .group { background: #22261d; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        h4 { font-size: 12px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        h4 { font-size: 11px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         
-        button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 8px; transition: 0.2s; }
-        button:active { transform: scale(0.95); background: var(--accent); color: black; }
+        button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 8px; }
+        label { font-size: 10px; display: block; margin: 10px 0 5px; opacity: 0.7; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); }
         
-        label { font-size: 11px; display: block; margin: 10px 0 5px; opacity: 0.8; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-        
-        .hero { position: absolute; will-change: transform; pointer-events: none; transition: width 0.3s; }
-        #db-status { font-size: 10px; text-align: center; padding: 4px; border-radius: 4px; background: #000; margin-bottom: 10px; }
+        .hero { position: absolute; will-change: transform; transition: width 0.3s; }
+        #db-status { font-size: 9px; text-align: center; margin-bottom: 10px; opacity: 0.6; }
     </style>
 </head>
 <body>
 
 <div id="mode-selector">
-    <h2 style="color:var(--accent)">БАЗА 10.8</h2>
-    <button onclick="selectMode('screen')" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН (ПРОЕКТОР)</button>
-    <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ (ТЕЛЕФОН)</button>
+    <h2 style="color:var(--accent)">БАЗА 10.9</h2>
+    <button onclick="selectMode('screen')" class="mode-btn" style="background:#3d4435; color:white;">💻 ЭКРАН (MAC/PC)</button>
+    <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ (IOS/ANDROID)</button>
 </div>
 
 <div id="main-container">
     <div id="forest">
         <div id="bg-media-container"><img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80"></div>
         <div id="hero-layer"></div>
-        <audio id="forest-audio" loop></audio>
+        <audio id="forest-audio" loop crossorigin="anonymous" playsinline></audio>
     </div>
 
     <div id="scanner" class="hidden">
-        <div id="db-status">СВЯЗЬ: ОЖИДАНИЕ...</div>
-
+        <div id="db-status">ПОДКЛЮЧЕНИЕ...</div>
         <div class="group">
             <h4>🌲 Лес</h4>
-            <label>Масштаб:</label>
             <input type="range" id="zoom-range" min="50" max="300" value="100">
-            <button onclick="$('bg-in').click()">🖼️ Сменить фон</button>
+            <button onclick="$('bg-in').click()">🖼️ Фон</button>
             <input type="file" id="bg-in" hidden accept="image/*">
         </div>
-
         <div class="group">
-            <h4>🔊 Атмосфера</h4>
-            <label>Громкость:</label>
+            <h4>🔊 Звук</h4>
             <input type="range" id="vol-range" min="0" max="100" value="50">
-            <button onclick="$('audio-in').click()">🎵 Загрузить звук</button>
+            <button onclick="$('audio-in').click()">🎵 Файл</button>
             <input type="file" id="audio-in" hidden accept="audio/*">
         </div>
-
         <div class="group">
-            <h4>👾 Герои (Нейронка)</h4>
-            <button onclick="$('hero-in').click()" style="background: var(--accent); color: black;">✨ Добавить героя</button>
+            <h4>👾 Герои</h4>
+            <button onclick="$('hero-in').click()" style="background: var(--accent); color: black;">✨ Добавить</button>
             <input type="file" id="hero-in" hidden accept="image/*">
-            <button onclick="clearHeroes()" style="background: #5e2626; font-size: 10px;">🗑️ Удалить всех</button>
+            <button onclick="clearHeroes()" style="background: #442222; font-size: 10px;">Удалить всех</button>
         </div>
     </div>
 </div>
@@ -85,21 +78,17 @@
         apiKey: "AIzaSyAOdgn7U8MKRbroByVJJXyL2NgQS405M64",
         authDomain: "lesbaza-d8fc9.firebaseapp.com",
         projectId: "lesbaza-d8fc9",
-        databaseURL: "https://lesbaza-d8fc9-default-rtdb.firebaseio.com/"
+        databaseURL: "https://lesbaza-d8fc9-default-rtdb.firebaseio.com/" // US Region
     };
 
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const dbRef = database.ref('forest_session');
+    const dbRef = firebase.database().ref('forest_session');
 
     let isRemote = false;
     let heroes = [];
 
-    // Проверка связи
     database.ref('.info/connected').on('value', snap => {
-        const s = $('db-status');
-        if (snap.val() === true) { s.innerText = "СВЯЗЬ: ОК ✅"; s.style.color = "#00ff00"; }
-        else { s.innerText = "СВЯЗЬ: ОШИБКА ❌"; s.style.color = "#ff0000"; }
+        $('db-status').innerText = snap.val() ? "СВЯЗЬ: ОК ✅" : "СВЯЗЬ: ОШИБКА ❌";
     });
 
     function selectMode(mode) {
@@ -108,82 +97,73 @@
         if (isRemote) {
             $('scanner').classList.remove('hidden');
             $('forest').classList.add('hidden');
-            setupRemoteControls();
+            setupRemote();
         } else {
-            // На экране сразу запускаем звук при первом клике (политика браузеров)
-            document.body.onclick = () => $('forest-audio').play();
+            // Для Safari: звук активируется только после первого жеста
+            const unlockAudio = () => {
+                $('forest-audio').play().catch(()=>{});
+                window.removeEventListener('click', unlockAudio);
+            };
+            window.addEventListener('click', unlockAudio);
         }
         setupSync();
         requestAnimationFrame(animate);
     }
 
-    // ТЕЛЕФОН: Отправка команд
-    function setupRemoteControls() {
+    function setupRemote() {
         $('zoom-range').oninput = e => dbRef.child('world').update({ zoom: e.target.value });
         $('vol-range').oninput = e => dbRef.child('world').update({ volume: e.target.value / 100 });
-        
-        $('bg-in').onchange = e => uploadFile(e.target.files[0], 'bg');
-        $('audio-in').onchange = e => uploadFile(e.target.files[0], 'audio');
-        $('hero-in').onchange = e => uploadFile(e.target.files[0], 'hero');
+        $('bg-in').onchange = e => upload(e.target.files[0], 'bg');
+        $('audio-in').onchange = e => upload(e.target.files[0], 'audio');
+        $('hero-in').onchange = e => upload(e.target.files[0], 'hero');
     }
 
-    function uploadFile(file, type) {
+    function upload(file, type) {
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            if (type === 'bg') dbRef.child('world').update({ bg: reader.result });
-            if (type === 'audio') dbRef.child('world').update({ audio: reader.result });
+        const r = new FileReader();
+        r.onload = () => {
+            if (type === 'bg') dbRef.child('world').update({ bg: r.result });
+            if (type === 'audio') dbRef.child('world').update({ audio: r.result });
             if (type === 'hero') {
-                const id = 'h_' + Date.now();
+                const id = 'h' + Date.now();
                 dbRef.child('heroes').child(id).set({
-                    src: reader.result,
-                    x: Math.random() * 500,
-                    y: Math.random() * 400 + 100,
-                    size: Math.random() * 150 + 50,
-                    speed: Math.random() * 20 + 5,
-                    dx: Math.random() > 0.5 ? 1 : -1
+                    src: r.result, x: 100, y: Math.random()*300+100, 
+                    size: 120, speed: Math.random()*15+5, dx: 1
                 });
             }
         };
-        reader.readAsDataURL(file);
+        r.readAsDataURL(file);
     }
 
     function clearHeroes() { dbRef.child('heroes').remove(); }
 
-    // ПРОЕКТОР: Прием команд
     function setupSync() {
         dbRef.on('value', snap => {
-            const data = snap.val() || {};
-            
-            if (!isRemote) {
-                // Синхро мира и звука
-                if (data.world) {
-                    if (data.world.zoom) $('bg-img').style.transform = `scale(${data.world.zoom/100})`;
-                    if (data.world.bg) $('bg-img').src = data.world.bg;
-                    if (data.world.audio && $('forest-audio').src !== data.world.audio) {
-                        $('forest-audio').src = data.world.audio;
-                        $('forest-audio').play();
-                    }
-                    if (data.world.volume !== undefined) $('forest-audio').volume = data.world.volume;
+            const d = snap.val() || {};
+            if (!isRemote && d.world) {
+                if (d.world.zoom) $('bg-img').style.transform = `scale(${d.world.zoom/100})`;
+                if (d.world.bg) $('bg-img').src = d.world.bg;
+                if (d.world.audio && $('forest-audio').src !== d.world.audio) {
+                    $('forest-audio').src = d.world.audio;
+                    $('forest-audio').play();
                 }
-
-                // Синхро героев
-                const cloudHeroes = data.heroes || {};
-                heroes.forEach(h => { if (!cloudHeroes[h.id]) { h.el.remove(); h.deleted = true; } });
+                if (d.world.volume !== undefined) $('forest-audio').volume = d.world.volume;
+            }
+            if (!isRemote) {
+                const cloud = d.heroes || {};
+                heroes.forEach(h => { if (!cloud[h.id]) { h.el.remove(); h.deleted = true; } });
                 heroes = heroes.filter(h => !h.deleted);
-
-                Object.keys(cloudHeroes).forEach(id => {
+                Object.keys(cloud).forEach(id => {
                     let h = heroes.find(x => x.id === id);
                     if (!h) {
                         const img = document.createElement('img');
-                        img.src = cloudHeroes[id].src;
-                        img.className = 'hero';
+                        img.src = cloud[id].src; img.className = 'hero';
                         $('hero-layer').appendChild(img);
                         h = { id, el: img };
                         heroes.push(h);
                     }
-                    const d = cloudHeroes[id];
-                    h.x = d.x; h.y = d.y; h.size = d.size; h.speed = d.speed; h.dx = d.dx;
+                    const c = cloud[id];
+                    h.x = c.x; h.y = c.y; h.size = c.size; h.speed = c.speed; h.dx = c.dx;
                     h.el.style.width = h.size + 'px';
                 });
             }
