@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 11.4 - AI OPTIMIZED</title>
+    <title>БАЗА 11.5 - STABLE AI</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -31,7 +31,7 @@
 <body>
 
 <div id="mode-selector">
-    <h2 style="color:var(--accent)">БАЗА 11.4</h2>
+    <h2 style="color:var(--accent)">БАЗА 11.5</h2>
     <button onclick="selectMode('screen')" class="mode-btn">💻 ЭКРАН</button>
     <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ</button>
 </div>
@@ -99,17 +99,18 @@
         if (!file) return;
         const key = $('api-key').value;
         const btn = $('ai-btn');
-        btn.disabled = true; btn.innerText = "⏳ ОБРАБОТКА...";
+        btn.disabled = true; btn.innerText = "⏳ СЖАТИЕ...";
 
         try {
-            // 1. Сжатие перед отправкой
-            const compressedBlob = await compressImage(file);
+            // 1. Экстремальное сжатие (600px, 0.6 quality)
+            const compressedBlob = await compressImage(file, 600, 0.6);
             let imgData = "";
 
             if (key) {
+                btn.innerText = "⏳ ВЫРЕЗКА ИИ...";
                 const formData = new FormData();
                 formData.append('image_file', compressedBlob);
-                formData.append('size', 'preview'); // 'preview' экономит трафик и быстрее работает
+                formData.append('size', 'preview');
 
                 const res = await fetch('https://api.remove.bg/v1.1/removebg', {
                     method: 'POST', headers: { 'X-Api-Key': key }, body: formData
@@ -119,11 +120,11 @@
                     const blob = await res.blob();
                     imgData = await blobToBase64(blob);
                 } else {
-                    const err = await res.json();
-                    alert("ИИ: " + err.errors[0].title);
+                    console.log("AI Error, adding original");
                 }
             }
             
+            // Если ИИ не сработал, берем сжатый оригинал
             if (!imgData) imgData = await blobToBase64(compressedBlob);
 
             const id = 'h' + Date.now();
@@ -131,13 +132,14 @@
                 src: imgData, x: 50, y: Math.random()*300+100, size: 150, speed: 10, dx: 1
             });
         } catch (e) {
-            alert("Ошибка. Попробуйте фото поменьше.");
+            console.error(e);
+            alert("Ошибка. Попробуйте еще раз.");
         } finally {
             btn.disabled = false; btn.innerText = "📸 Сфотографировать";
         }
     }
 
-    function compressImage(file) {
+    function compressImage(file, maxSize, quality) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -146,13 +148,13 @@
                 img.src = e.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 800; // Сжимаем до 800px для скорости
                     let w = img.width, h = img.height;
-                    if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
-                    else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
+                    if (w > h) { if (w > maxSize) { h *= maxSize / w; w = maxSize; } }
+                    else { if (h > maxSize) { w *= maxSize / h; h = maxSize; } }
                     canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    canvas.toBlob(resolve, 'image/jpeg', 0.7);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    canvas.toBlob(resolve, 'image/jpeg', quality);
                 };
             };
         });
