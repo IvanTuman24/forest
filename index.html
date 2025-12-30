@@ -3,47 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>БАЗА 11.7 - FULL CONTROL</title>
+    <title>БАЗА 11.8 - FINAL CONTROL</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        :root { --accent: #ff9d00; --bg: #0e120a; --panel: rgba(26, 29, 22, 0.98); }
+        :root { --accent: #ff9d00; --panel: rgba(26, 29, 22, 0.98); }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
-        
         #mode-selector { position: fixed; inset: 0; z-index: 10000; background: #0e120a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-        .mode-btn { padding: 20px; font-size: 20px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; width: 280px; }
-
+        .mode-btn { padding: 20px; font-size: 20px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; width: 280px; background: #3d4435; color: white; }
         #main-container { display: flex; width: 100vw; height: 100vh; position: relative; }
         #forest { flex: 1; position: relative; overflow: hidden; }
         #bg-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
         #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-
-        #scanner { 
-            position: absolute; right: 0; top: 0; bottom: 0; 
-            width: 320px; background: var(--panel); 
-            backdrop-filter: blur(15px); z-index: 100; 
-            transition: transform 0.4s; padding: 15px; display: flex; flex-direction: column;
-            border-left: 2px solid var(--accent);
-        }
+        #scanner { position: absolute; right: 0; top: 0; bottom: 0; width: 320px; background: var(--panel); backdrop-filter: blur(15px); z-index: 100; transition: transform 0.4s; padding: 15px; display: flex; flex-direction: column; border-left: 2px solid var(--accent); }
         #scanner.collapsed { transform: translateX(100%); }
-        #toggle-panel {
-            position: absolute; left: -45px; top: 20px; width: 45px; height: 45px;
-            background: var(--panel); border: 2px solid var(--accent); border-right: none;
-            color: var(--accent); cursor: pointer; border-radius: 10px 0 0 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
-        }
-
+        #toggle-panel { position: absolute; left: -45px; top: 20px; width: 45px; height: 45px; background: var(--panel); border: 2px solid var(--accent); border-right: none; color: var(--accent); cursor: pointer; border-radius: 10px 0 0 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         .group { background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; }
         h4 { font-size: 10px; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 5px; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); }
-        
+        button { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 5px; font-size: 12px; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; }
         .hero-card { background: #2a2d26; border-radius: 8px; padding: 10px; margin-top: 8px; border-left: 3px solid var(--accent); }
+        .hero-card label { font-size: 9px; opacity: 0.7; display: block; margin-top: 5px; }
         .hero { position: absolute; will-change: transform; }
-        
-        #debug-log { font-size: 9px; color: #ff5555; margin-top: 5px; font-family: monospace; }
-        
+        #debug-log { font-size: 9px; color: #ff5555; margin-top: 5px; }
         body.is-remote #forest { display: none; }
         body.is-remote #scanner { position: relative; width: 100%; transform: none; border: none; }
         body.is-remote #toggle-panel { display: none; }
@@ -52,132 +35,103 @@
 <body>
 
 <div id="mode-selector">
-    <h2 style="color:var(--accent)">БАЗА 11.7</h2>
-    <button onclick="selectMode('screen')" class="mode-btn">💻 ЭКРАН</button>
-    <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ</button>
+    <h2 style="color:var(--accent)">БАЗА 11.8</h2>
+    <button onclick="selectMode('screen')" class="mode-btn">💻 ЭКРАН (Проектор)</button>
+    <button onclick="selectMode('remote')" class="mode-btn" style="background:var(--accent); color:black;">📱 ПУЛЬТ (Телефон)</button>
 </div>
 
 <div id="main-container">
     <div id="forest">
-        <div style="position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-            <img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80">
-        </div>
+        <div style="position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center;"><img id="bg-img" src=""></div>
         <div id="hero-layer"></div>
         <audio id="forest-audio" loop crossorigin="anonymous" playsinline></audio>
     </div>
 
     <div id="scanner" class="hidden">
-        <button id="toggle-panel" onclick="$('scanner').classList.toggle('collapsed')">⚙️</button>
+        <button id="toggle-panel" onclick="document.getElementById('scanner').classList.toggle('collapsed')">⚙️</button>
         
         <div class="group">
-            <h4>🌲 Лес</h4>
-            <input type="range" id="zoom-range" min="50" max="300" value="100" oninput="dbRef.child('world').update({zoom: this.value})">
-            <button onclick="$('bg-in').click()">🖼️ Сменить фон</button>
+            <h4>🌲 Окружение</h4>
+            <button onclick="document.getElementById('bg-in').click()">🖼️ Фон</button>
             <input type="file" id="bg-in" hidden accept="image/*" onchange="upload(this.files[0], 'bg')">
+            <button onclick="document.getElementById('audio-in').click()">🎵 Звук</button>
+            <input type="file" id="audio-in" hidden accept="audio/*" onchange="upload(this.files[0], 'audio')">
+            <label style="font-size:9px;">Громкость:</label>
+            <input type="range" min="0" max="100" value="50" oninput="dbRef.child('world').update({vol: this.value/100})">
         </div>
 
         <div class="group">
-            <h4>👾 Камера ИИ</h4>
-            <input type="text" id="api-key" placeholder="remove.bg key" style="width:100%; padding:8px; background:#000; border:1px solid #444; color:#fff; margin-bottom:5px;">
-            <button id="ai-btn" onclick="$('hero-in').click()">📸 Сделать фото</button>
+            <h4>👾 ИИ Сканер</h4>
+            <input type="text" id="api-key" placeholder="Ключ remove.bg" style="width:100%; padding:8px; background:#000; border:1px solid #444; color:#fff; font-size:11px;">
+            <button id="ai-btn" onclick="document.getElementById('hero-in').click()" style="background:var(--accent); color:black;">📸 Сфотографировать</button>
             <input type="file" id="hero-in" hidden accept="image/*" capture="camera" onchange="processHero(this.files[0])">
         </div>
         
         <div id="hero-editor-list" style="overflow-y: auto; flex: 1;"></div>
-        <button onclick="dbRef.child('heroes').remove()" style="background: #442222; font-size: 10px;">🗑️ Очистить всё</button>
-        <div id="debug-log">Статус: Готов</div>
+        <button onclick="dbRef.child('heroes').remove()" style="background: #442222; font-size: 10px; margin-top:5px;">🗑️ Очистить героев</button>
+        <div id="debug-log"></div>
     </div>
 </div>
 
 <script>
-    const $ = id => document.getElementById(id);
     const firebaseConfig = {
         apiKey: "AIzaSyAOdgn7U8MKRbroByVJJXyL2NgQS405M64",
         authDomain: "lesbaza-d8fc9.firebaseapp.com",
         projectId: "lesbaza-d8fc9",
         databaseURL: "https://lesbaza-d8fc9-default-rtdb.firebaseio.com/"
     };
-
     firebase.initializeApp(firebaseConfig);
     const dbRef = firebase.database().ref('forest_session');
     let isRemote = false; let heroes = [];
 
-    function selectMode(mode) {
-        $('mode-selector').style.display = 'none';
-        $('scanner').classList.remove('hidden');
+    async function selectMode(mode) {
+        document.getElementById('mode-selector').style.display = 'none';
+        document.getElementById('scanner').classList.remove('hidden');
         isRemote = (mode === 'remote');
-        if (isRemote) document.body.classList.add('is-remote');
+        if (isRemote) {
+            document.body.classList.add('is-remote');
+            try { await navigator.mediaDevices.getUserMedia({ video: true }); } catch(e) {}
+        }
         setupSync(); requestAnimationFrame(animate);
     }
 
     async function processHero(file) {
         if (!file) return;
-        const key = $('api-key').value;
-        const btn = $('ai-btn');
+        const key = document.getElementById('api-key').value;
+        const btn = document.getElementById('ai-btn');
         btn.disabled = true; btn.innerText = "⏳ ЖДИ...";
-        $('debug-log').innerText = "Лог: Сжатие...";
-
         try {
-            const compressedBlob = await compressImage(file, 550, 0.6);
-            let imgData = "";
-
-            if (key) {
-                $('debug-log').innerText = "Лог: Отправка в ИИ...";
-                const formData = new FormData();
-                formData.append('image_file', compressedBlob);
-                const res = await fetch('https://api.remove.bg/v1.1/removebg', {
-                    method: 'POST', headers: { 'X-Api-Key': key }, body: formData
-                });
-                if (res.ok) {
-                    const blob = await res.blob();
-                    imgData = await blobToBase64(blob);
-                } else {
-                    const err = await res.text();
-                    $('debug-log').innerText = "Лог Ошибки: " + res.status;
-                }
-            }
-
-            if (!imgData) imgData = await blobToBase64(compressedBlob);
-
-            const id = 'h' + Date.now();
-            await dbRef.child('heroes').child(id).set({
-                src: imgData, x: 50, y: Math.random()*300+100, size: 150, speed: 10, dx: 1
-            });
-            $('debug-log').innerText = "Лог: Готово!";
-        } catch (e) {
-            $('debug-log').innerText = "Лог: Ошибка системы";
-        } finally {
-            btn.disabled = false; btn.innerText = "📸 Сделать фото";
-        }
-    }
-
-    function compressImage(file, maxSize, quality) {
-        return new Promise((r) => {
-            const rd = new FileReader();
-            rd.readAsDataURL(file);
-            rd.onload = (e) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async (e) => {
                 const img = new Image();
                 img.src = e.target.result;
-                img.onload = () => {
+                img.onload = async () => {
                     const canvas = document.createElement('canvas');
-                    let w = img.width, h = img.height;
-                    if (w > maxSize) { h *= maxSize / w; w = maxSize; }
+                    const MAX = 600; let w = img.width, h = img.height;
+                    if (w > MAX) { h *= MAX/w; w = MAX; }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    canvas.toBlob(r, 'image/jpeg', quality);
+                    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.6));
+                    let imgData = "";
+                    if (key) {
+                        const fd = new FormData(); fd.append('image_file', blob);
+                        const res = await fetch('https://api.remove.bg/v1.1/removebg', { method: 'POST', headers: { 'X-Api-Key': key }, body: fd });
+                        if (res.ok) imgData = await (await res.blob()).then(blobToBase64);
+                    }
+                    if (!imgData) imgData = await blobToBase64(blob);
+                    dbRef.child('heroes').child('h'+Date.now()).set({ src: imgData, x: 50, y: Math.random()*300+100, size: 150, speed: 10, dx: 1 });
+                    btn.disabled = false; btn.innerText = "📸 Сфотографировать";
                 };
             };
-        });
+        } catch(e) { btn.disabled = false; }
     }
 
-    function blobToBase64(blob) {
-        return new Promise((r) => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
-    }
+    function blobToBase64(blob) { return new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); }); }
 
     function upload(file, type) {
         if (!file) return;
-        const rd = new FileReader();
-        rd.onload = () => dbRef.child('world').update({ [type]: rd.result });
+        const rd = new FileReader(); rd.onload = () => dbRef.child('world').update({ [type]: rd.result });
         rd.readAsDataURL(file);
     }
 
@@ -185,44 +139,17 @@
         dbRef.on('value', snap => {
             const d = snap.val() || {};
             if (d.world) {
-                if (d.world.zoom) $('bg-img').style.transform = `scale(${d.world.zoom/100})`;
-                if (d.world.bg) $('bg-img').src = d.world.bg;
+                if (d.world.bg) document.getElementById('bg-img').src = d.world.bg;
+                if (d.world.audio && document.getElementById('forest-audio').src !== d.world.audio) {
+                    document.getElementById('forest-audio').src = d.world.audio;
+                    document.getElementById('forest-audio').play();
+                }
+                if (d.world.vol !== undefined) document.getElementById('forest-audio').volume = d.world.vol;
             }
             const cloud = d.heroes || {};
-            $('hero-editor-list').innerHTML = Object.keys(cloud).map(id => `
+            document.getElementById('hero-editor-list').innerHTML = Object.keys(cloud).map(id => `
                 <div class="hero-card">
-                    <span style="font-size:10px;">Герой ${id.slice(-3)}</span>
-                    <button onclick="firebase.database().ref('forest_session/heroes/${id}').remove()" style="width:20px; float:right; background:#622;">×</button>
-                    <input type="range" min="50" max="400" value="${cloud[id].size}" oninput="dbRef.child('heroes').child('${id}').update({size: parseInt(this.value)})">
-                </div>
-            `).join('');
-
-            if (!isRemote) {
-                heroes.forEach(h => { if (!cloud[h.id]) { h.el.remove(); h.deleted = true; } });
-                heroes = heroes.filter(h => !h.deleted);
-                Object.keys(cloud).forEach(id => {
-                    let h = heroes.find(x => x.id === id);
-                    if (!h) {
-                        const img = document.createElement('img'); img.src = cloud[id].src; img.className = 'hero';
-                        $('hero-layer').appendChild(img); h = { id, el: img }; heroes.push(h);
-                    }
-                    const c = cloud[id]; h.x = c.x; h.y = c.y; h.size = c.size;
-                    h.el.style.width = h.size + 'px';
-                });
-            }
-        });
-    }
-
-    function animate() {
-        if (!isRemote) {
-            const vw = window.innerWidth;
-            heroes.forEach(h => {
-                h.x += 1.5; if (h.x > vw + 200) h.x = -200;
-                h.el.style.transform = `translate(${h.x}px, ${h.y}px)`;
-            });
-        }
-        requestAnimationFrame(animate);
-    }
-</script>
-</body>
-</html>
+                    <span style="font-size:10px;font-weight:bold;">Герой ${id.slice(-3)}</span>
+                    <button onclick="firebase.database().ref('forest_session/heroes/${id}').remove()" style="width:20px;float:right;background:#622;margin:0;padding:0;">×</button>
+                    <label>Размер:</label>
+                    <input type="range" min="50" max="400" value="${cloud[id].size}" oninput="dbRef.child('heroes').child('${id}').update({size:
