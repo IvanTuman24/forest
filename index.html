@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ЛЕС 23.0 - FULL REMOTE</title>
+    <title>ЛЕС 24.0 - BG REMOTE FIX</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --accent: #00ffcc; --panel: #111411; }
@@ -107,18 +107,34 @@
         requestAnimationFrame(animate);
     }
 
-    // Универсальная команда: шлет на экран или делает сама
+    // Универсальная команда (ползунки)
     function cmd(type, val) {
         if(role === 'phone' && conn && conn.open) {
             conn.send({type: 'cmd', cmdType: type, value: val});
         }
-        // Выполняем локально, если мы экран
         if(type === 'zoom') $('bg-media').style.transform = `scale(${val/100})`;
         if(type === 'wind') {
             document.documentElement.style.setProperty('--ws', (21 - val) / 2 + 's');
             document.documentElement.style.setProperty('--wp', (val / 2) + 'deg');
         }
         if(type === 'vol' && window.bgA) window.bgA.volume = val;
+    }
+
+    // СМЕНА ФОНА (теперь с отправкой)
+    function changeBg(input) {
+        if(!input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const src = e.target.result;
+            if(role === 'phone' && conn && conn.open) {
+                setStatus("⏳ ОТПРАВКА ФОНА...");
+                conn.send({type: 'new-bg', src: src});
+            } else {
+                $('bg-media').src = src;
+            }
+        };
+        reader.readAsDataURL(file);
     }
 
     function initPeer(id) {
@@ -134,7 +150,8 @@
             setStatus("📱 ПУЛЬТ ПОДКЛЮЧЕН", "ok");
             conn.on('data', data => { 
                 if(data.type === 'hero') { addHero(data.src); conn.send({type: 'ack'}); }
-                if(data.type === 'cmd') { cmd(data.cmdType, data.value); } // Слушаем команды пульта
+                if(data.type === 'cmd') { cmd(data.cmdType, data.value); }
+                if(data.type === 'new-bg') { $('bg-media').src = data.src; setStatus("🖼️ ФОН ОБНОВЛЕН", "ok"); }
             });
         });
     }
@@ -145,6 +162,7 @@
         conn.on('data', d => { if(d.type === 'ack') setStatus("✨ ГЕРОЙ НА ЭКРАНЕ!", "ok"); });
     }
 
+    // ИИ и сканер героев (без изменений)
     async function callAI(file) {
         const key = $('api-key').value;
         if(!key) { alert("ВСТАВЬ КЛЮЧ!"); return; }
@@ -159,9 +177,8 @@
                 const b = await r.blob();
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                    if(role === 'phone' && conn && conn.open) {
-                        conn.send({type: 'hero', src: reader.result});
-                    } else { addHero(reader.result); }
+                    if(role === 'phone' && conn && conn.open) { conn.send({type: 'hero', src: reader.result}); } 
+                    else { addHero(reader.result); }
                     setStatus("✅ ГОТОВО", "ok");
                 };
                 reader.readAsDataURL(b);
@@ -169,10 +186,8 @@
         } catch(e) { setStatus("❌ ОШИБКА СЕТИ"); }
     }
 
-    // Остальные функции (камера, фон, герои) без изменений для стабильности
     async function initCamera() { try { const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); $('feed').srcObject = s; } catch(e){}}
     function processFromCam() { const c = document.createElement('canvas'); const v = $('feed'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0); c.toBlob(b => callAI(b)); }
-    function changeBg(i) { if(i.files[0]) $('bg-media').src = URL.createObjectURL(i.files[0]); }
     function addHero(src) {
         const id = Date.now();
         const img = document.createElement('img');
