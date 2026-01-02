@@ -3,52 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ЛЕС 23.0 - FULL REMOTE</title>
+    <title>ЛЕС 26.0 - ULTIMATE CONNECT</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --accent: #00ffcc; --panel: #111411; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: #eee; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #eee; }
+        
         #selector { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-        .mode-btn { width: 280px; padding: 25px; border-radius: 15px; border: 2px solid var(--accent); background: #111; color: white; cursor: pointer; text-align: center; }
+        .mode-btn { width: 280px; padding: 20px; border-radius: 12px; border: 2px solid var(--accent); background: #111; color: white; cursor: pointer; text-align: center; }
+
         #main-wrapper { display: flex; width: 100vw; height: 100vh; position: relative; }
         #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
-        #bg-container { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        #bg-media { min-width: 100%; min-height: 100%; object-fit: cover; transition: transform 0.1s; }
+        #bg-media { min-width: 100%; min-height: 100%; object-fit: cover; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.1s; }
         #hero-layer { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-        @keyframes wind { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(var(--wp, 2deg)); } }
-        .wind-active { animation: wind var(--ws, 5s) ease-in-out infinite; }
+        
         .hero { position: absolute; will-change: transform; transform-origin: center bottom; }
+
         #side-panel { width: 340px; background: var(--panel); border-left: 1px solid #333; transition: 0.4s; z-index: 100; position: relative; display: flex; flex-direction: column; }
         #side-panel.hidden { margin-right: -340px; }
         #toggle-panel { position: absolute; left: -45px; top: 20px; width: 45px; height: 45px; background: var(--panel); border: 1px solid #333; border-right: none; color: var(--accent); cursor: pointer; border-radius: 10px 0 0 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
         .content { padding: 15px; overflow-y: auto; flex: 1; }
-        .group { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
-        .group-title { font-size: 10px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; font-weight: bold; }
-        #ai-status { padding: 10px; border-radius: 6px; font-size: 11px; text-align: center; margin-bottom: 10px; font-weight: bold; border: 1px solid #333; background: #1a1a1a; }
-        .status-ok { color: var(--accent); border-color: var(--accent); }
-        #cam-box { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden; position: relative; margin-bottom: 10px; border: 1px solid #444; }
-        video#feed { width: 100%; height: 100%; object-fit: cover; }
+        .group { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #444; }
+        #ai-status { padding: 10px; border-radius: 6px; font-size: 11px; text-align: center; margin-bottom: 10px; font-weight: bold; border: 1px solid #333; background: #000; }
+        .status-ok { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(0,255,204,0.2); }
+
         button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: #2a2d26; color: white; font-size: 11px; margin-top: 5px; }
         .btn-ai { background: var(--accent) !important; color: #000 !important; }
         input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; }
         label { font-size: 9px; color: #888; display: block; margin-top: 8px; }
-        .h-item { display: flex; align-items: center; gap: 10px; background: #000; padding: 8px; border-radius: 8px; margin-top: 8px; border: 1px solid #333; }
-        .h-mini { width: 40px; height: 40px; object-fit: contain; }
-        #qr-box { position: absolute; top: 20px; left: 20px; background: white; padding: 10px; border-radius: 10px; z-index: 1000; display: none; text-align: center; }
+
+        #qr-box { position: absolute; top: 20px; left: 20px; background: white; padding: 10px; border-radius: 10px; z-index: 1000; display: none; text-align: center; color: #000; }
     </style>
 </head>
 <body>
 
 <div id="selector">
-    <div class="mode-btn" onclick="start('screen')"><h2>🖥️ ЭКРАН (ЛЕС)</h2></div>
-    <div class="mode-btn" onclick="start('phone')"><h2>📱 ТЕЛЕФОН (ПУЛЬТ)</h2></div>
+    <div class="mode-btn" onclick="startMode('screen')"><h2>ЭКРАН</h2><p>Запустить лес</p></div>
+    <div class="mode-btn" onclick="startMode('phone')"><h2>ПУЛЬТ</h2><p>Управлять с телефона</p></div>
 </div>
 
 <div id="main-wrapper">
     <div id="forest">
-        <div id="qr-box"><div id="qr-img"></div><p style="color:black; font-size:10px; font-weight:bold; margin-top:5px;">ПУЛЬТ</p></div>
-        <div id="bg-container" class="wind-active">
+        <div id="qr-box"><div id="qr-img"></div><p style="font-weight:bold; font-size:12px;">СКАНИРУЙ ПУЛЬТ</p></div>
+        <div id="bg-container">
             <img id="bg-media" src="https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1920">
         </div>
         <div id="hero-layer"></div>
@@ -57,40 +56,39 @@
     <div id="side-panel">
         <div id="toggle-panel" onclick="$('side-panel').classList.toggle('hidden')">◀</div>
         <div class="content">
-            <div id="ai-status">ОЖИДАНИЕ...</div>
+            <div id="ai-status">СИСТЕМА ГОТОВА</div>
+            
             <div class="group">
-                <div class="group-title">1. ИИ ГЕРОИ</div>
-                <input type="password" id="api-key" placeholder="Remove.bg Key" style="width:100%; background:black; color:white; padding:8px; border:1px solid #444; border-radius:4px; margin-bottom:8px;">
-                <div id="cam-box"><video id="feed" autoplay playsinline></video></div>
-                <button class="btn-ai" onclick="processFromCam()">✂️ ВЫРЕЗАТЬ С КАМЕРЫ</button>
-                <button onclick="$('h-pc').click()">📂 С КОМПЬЮТЕРА</button>
-                <input type="file" id="h-pc" hidden onchange="callAI(this.files[0])">
+                <label>API KEY (REMOVE.BG)</label>
+                <input type="password" id="api-key" style="width:100%; background:#000; color:#fff; border:1px solid #444; padding:5px;">
+                <video id="feed" style="width:100%; margin-top:10px; border-radius:5px;" autoplay playsinline></video>
+                <button class="btn-ai" onclick="takePhoto()">✂️ ВЫРЕЗАТЬ ГЕРОЯ</button>
             </div>
+
             <div class="group">
-                <div class="group-title">2. ОКРУЖЕНИЕ И ЗВУК</div>
-                <label>МАСШТАБ ФОНА</label>
-                <input type="range" id="zoom-range" min="50" max="300" value="100" oninput="cmd('zoom', this.value)">
-                <label>ВЕТЕР</label>
-                <input type="range" id="wind-range" min="1" max="20" value="10" oninput="cmd('wind', this.value)">
+                <label>МАСШТАБ ЛЕСА</label>
+                <input type="range" min="100" max="300" value="100" oninput="control('zoom', this.value)">
                 <label>ГРОМКОСТЬ</label>
-                <input type="range" id="vol-range" min="0" max="1" step="0.1" value="0.5" oninput="cmd('vol', this.value)">
-                <button onclick="$('bg-in').click()">🖼️ СМЕНИТЬ ФОН</button>
-                <input type="file" id="bg-in" hidden onchange="changeBg(this)">
+                <input type="range" min="0" max="1" step="0.1" value="0.5" oninput="control('vol', this.value)">
+                <button onclick="$('bg-file').click()">🖼️ НОВЫЙ ФОН</button>
+                <input type="file" id="bg-file" hidden onchange="uploadBg(this)">
             </div>
-            <div class="group" id="rem-group">
-                <button style="background:#4b0082" onclick="toggleQR()">📲 ТЕЛЕФОН-ПУЛЬТ</button>
+
+            <div class="group" id="qr-group">
+                <button onclick="showQR()" style="background:#4b0082">📲 ПОДКЛЮЧИТЬ ТЕЛЕФОН</button>
             </div>
-            <div id="list"></div>
+            
+            <div id="hero-list"></div>
         </div>
     </div>
 </div>
 
 <script>
     const $ = id => document.getElementById(id);
-    let heroes = [], peer, conn, role;
-    const MASTER_ID = 'forest-base-2026';
+    let peer, conn, role, heroes = [];
+    const BASE_ID = "FOREST_PROJECT_2026"; // Постоянный ключ
 
-    async function start(m) {
+    function startMode(m) {
         role = m;
         $('selector').style.display = 'none';
         if(role === 'phone') {
@@ -98,107 +96,138 @@
             $('side-panel').style.width = '100%';
             $('side-panel').classList.remove('hidden');
             $('toggle-panel').style.display = 'none';
-            $('rem-group').style.display = 'none';
-            initPeer(null);
+            $('qr-group').style.display = 'none';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const connectId = urlParams.get('join') || BASE_ID;
+            initPeer(null, connectId); 
         } else {
-            initPeer(MASTER_ID);
+            initPeer(BASE_ID, null);
             initCamera();
         }
-        requestAnimationFrame(animate);
+        requestAnimationFrame(update);
     }
 
-    // Универсальная команда: шлет на экран или делает сама
-    function cmd(type, val) {
-        if(role === 'phone' && conn && conn.open) {
-            conn.send({type: 'cmd', cmdType: type, value: val});
-        }
-        // Выполняем локально, если мы экран
-        if(type === 'zoom') $('bg-media').style.transform = `scale(${val/100})`;
-        if(type === 'wind') {
-            document.documentElement.style.setProperty('--ws', (21 - val) / 2 + 's');
-            document.documentElement.style.setProperty('--wp', (val / 2) + 'deg');
-        }
-        if(type === 'vol' && window.bgA) window.bgA.volume = val;
-    }
-
-    function initPeer(id) {
-        peer = new Peer(id);
-        peer.on('open', () => {
-            if(role === 'phone') {
-                const urlParams = new URLSearchParams(window.location.search);
-                connectTo(urlParams.get('c') || MASTER_ID);
-            } else { setStatus("ЭКРАН ГОТОВ", "ok"); }
+    function initPeer(myId, targetId) {
+        peer = new Peer(myId);
+        
+        peer.on('open', (id) => {
+            if(role === 'screen') setStatus("ЭКРАН ОЖИДАЕТ ПУЛЬТ...", "ok");
+            if(targetId) {
+                setStatus("ПОДКЛЮЧЕНИЕ К ЭКРАНУ...");
+                connect(targetId);
+            }
         });
-        peer.on('connection', c => {
+
+        peer.on('connection', (c) => {
             conn = c;
-            setStatus("📱 ПУЛЬТ ПОДКЛЮЧЕН", "ok");
-            conn.on('data', data => { 
-                if(data.type === 'hero') { addHero(data.src); conn.send({type: 'ack'}); }
-                if(data.type === 'cmd') { cmd(data.cmdType, data.value); } // Слушаем команды пульта
-            });
+            setStatus("📱 ПУЛЬТ ПОДКЛЮЧЕН!", "ok");
+            conn.on('data', data => handleData(data));
+        });
+
+        peer.on('error', (err) => {
+            console.error(err);
+            if(err.type === 'unavailable-id') {
+                // Если ID занят, пробуем подключиться к нему как пульт
+                startMode('phone');
+            } else {
+                setStatus("ОШИБКА СВЯЗИ. ПЕРЕЗАГРУЗКА...");
+                setTimeout(() => location.reload(), 2000);
+            }
         });
     }
 
-    function connectTo(target) {
-        conn = peer.connect(target);
-        conn.on('open', () => setStatus("✅ СВЯЗЬ С ЭКРАНОМ", "ok"));
-        conn.on('data', d => { if(d.type === 'ack') setStatus("✨ ГЕРОЙ НА ЭКРАНЕ!", "ok"); });
+    function connect(id) {
+        conn = peer.connect(id, { reliable: true });
+        conn.on('open', () => setStatus("✅ УПРАВЛЕНИЕ АКТИВНО", "ok"));
+        conn.on('data', data => { if(data.type === 'ack') setStatus("✨ ГЕРОЙ ДОСТАВЛЕН!", "ok"); });
+        // Авто-переподключение
+        conn.on('close', () => { setStatus("СВЯЗЬ ПОТЕРЯНА. ЖДУ..."); setTimeout(() => connect(id), 2000); });
     }
 
-    async function callAI(file) {
+    function handleData(data) {
+        if(data.type === 'cmd') {
+            if(data.name === 'zoom') $('bg-media').style.transform = `translate(-50%, -50%) scale(${data.val/100})`;
+            if(data.name === 'vol' && window.audio) window.audio.volume = data.val;
+        }
+        if(data.type === 'hero') { addHero(data.src); conn.send({type: 'ack'}); }
+        if(data.type === 'bg') { $('bg-media').src = data.src; setStatus("🖼️ ФОН ОБНОВЛЕН", "ok"); }
+    }
+
+    function control(name, val) {
+        if(role === 'phone' && conn) conn.send({type: 'cmd', name: name, val: val});
+        handleData({type: 'cmd', name: name, val: val}); // Для локального теста
+    }
+
+    function uploadBg(input) {
+        if(!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if(role === 'phone' && conn) conn.send({type: 'bg', src: e.target.result});
+            else $('bg-media').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    async function takePhoto() {
+        const c = document.createElement('canvas');
+        const v = $('feed');
+        c.width = v.videoWidth; c.height = v.videoHeight;
+        c.getContext('2d').drawImage(v, 0, 0);
         const key = $('api-key').value;
-        if(!key) { alert("ВСТАВЬ КЛЮЧ!"); return; }
-        setStatus("🚀 ИИ РАБОТАЕТ...");
-        const fd = new FormData();
-        fd.append('image_file', file);
-        try {
-            const r = await fetch('https://api.remove.bg/v1.0/removebg', {
-                method: 'POST', headers: {'X-Api-Key': key}, body: fd
-            });
-            if(r.ok) {
-                const b = await r.blob();
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    if(role === 'phone' && conn && conn.open) {
-                        conn.send({type: 'hero', src: reader.result});
-                    } else { addHero(reader.result); }
-                    setStatus("✅ ГОТОВО", "ok");
-                };
-                reader.readAsDataURL(b);
-            } else { setStatus("❌ ОШИБКА ИИ"); }
-        } catch(e) { setStatus("❌ ОШИБКА СЕТИ"); }
+        if(!key) { alert("ВСТАВЬ API KEY!"); return; }
+
+        setStatus("🚀 ИИ ОБРАБОТКА...");
+        c.toBlob(async (blob) => {
+            const fd = new FormData();
+            fd.append('image_file', blob);
+            try {
+                const res = await fetch('https://api.remove.bg/v1.0/removebg', {
+                    method: 'POST', headers: {'X-Api-Key': key}, body: fd
+                });
+                if(res.ok) {
+                    const b = await res.blob();
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        if(role === 'phone' && conn) conn.send({type: 'hero', src: reader.result});
+                        else addHero(reader.result);
+                        setStatus("ГЕРОЙ ГОТОВ!", "ok");
+                    };
+                    reader.readAsDataURL(b);
+                }
+            } catch(e) { setStatus("ОШИБКА ИИ"); }
+        });
     }
 
-    // Остальные функции (камера, фон, герои) без изменений для стабильности
-    async function initCamera() { try { const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); $('feed').srcObject = s; } catch(e){}}
-    function processFromCam() { const c = document.createElement('canvas'); const v = $('feed'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0); c.toBlob(b => callAI(b)); }
-    function changeBg(i) { if(i.files[0]) $('bg-media').src = URL.createObjectURL(i.files[0]); }
     function addHero(src) {
-        const id = Date.now();
         const img = document.createElement('img');
         img.src = src; img.className = 'hero';
-        const line = heroes.length % 2;
-        const h = $('forest').clientHeight;
-        const ground = line === 0 ? h * 0.45 : h * 0.85;
-        const size = line === 0 ? 120 : 200;
-        img.style.bottom = (h - ground) + "px";
-        img.style.zIndex = line === 0 ? 5 : 15;
+        const line = heroes.length % 2 === 0 ? 0.8 : 0.5;
+        const size = heroes.length % 2 === 0 ? 250 : 130;
+        img.style.bottom = ($('forest').clientHeight * (1 - line)) + "px";
         img.style.width = size + "px";
+        img.style.zIndex = heroes.length % 2 === 0 ? 20 : 5;
         $('hero-layer').appendChild(img);
-        heroes.push({ id, el: img, x: -200, y: ground, size, speed: 10, angle: 0 });
-        const item = document.createElement('div');
-        item.className = 'h-item'; item.id = 'ui-'+id;
-        item.innerHTML = `<img src="${src}" class="h-mini"><input type="range" min="30" max="600" value="${size}" oninput="updateH(${id},'s',this.value)"><button onclick="delH(${id})" style="width:30px; background:#500">×</button>`;
-        $('list').appendChild(item);
+        heroes.push({ el: img, x: -300, speed: 1 + Math.random() * 2 });
     }
-    window.updateH = (id, t, v) => { const h = heroes.find(x => x.id === id); if(h && t === 's') { h.size = v; h.el.style.width = v + "px"; }}
-    window.delH = id => { const i = heroes.findIndex(x => x.id === id); if(i > -1) { heroes[i].el.remove(); heroes.splice(i,1); $('ui-'+id).remove(); }}
+
+    function showQR() {
+        const url = window.location.href.split('?')[0] + "?join=" + BASE_ID;
+        $('qr-img').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}">`;
+        $('qr-box').style.display = $('qr-box').style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function initCamera() { try { const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); $('feed').srcObject = s; } catch(e){}}
     function setStatus(t, s) { $('ai-status').innerText = t; $('ai-status').className = s === 'ok' ? 'status-ok' : ''; }
-    function toggleQR() { const url = window.location.href.split('?')[0] + '?c=' + MASTER_ID; $('qr-img').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}">`; $('qr-box').style.display = $('qr-box').style.display === 'block' ? 'none' : 'block'; }
-    function animate() {
+
+    function update() {
         const w = $('forest').clientWidth;
-        heroes.forEach(h => { h.x += h.speed / 10; if(h.x > w + 200) h.x = -h.size; h.angle += 0.04; h.el.style.transform = `translateX(${h.x}px) translateY(${Math.sin(h.angle)*4}px)`; });
-        requestAnimationFrame(animate);
+        heroes.forEach(h => {
+            h.x += h.speed;
+            if(h.x > w + 300) h.x = -300;
+            h.el.style.transform = `translateX(${h.x}px)`;
+        });
+        requestAnimationFrame(update);
     }
 </script>
 </body>
