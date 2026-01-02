@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ЛЕС 20.0 - TOTAL CONTROL</title>
+    <title>ЛЕС 21.0 - TOTAL FIX</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --accent: #2e8b57; --panel: #141712; }
@@ -15,34 +15,36 @@
 
         #main-container { display: flex; width: 100vw; height: 100vh; position: relative; }
         
-        #forest { flex: 1; position: relative; overflow: hidden; }
-        #bg-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
+        #bg-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #bg-media { min-width: 100%; min-height: 100%; object-fit: cover; transition: transform 0.1s ease-out; }
         #hero-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
 
         @keyframes sway { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(var(--wp, 2deg)); } }
-        .sway { animation: sway var(--ws, 6s) ease-in-out infinite; }
+        .sway-active { animation: sway var(--ws, 6s) ease-in-out infinite; }
 
         #side-panel { width: 340px; background: var(--panel); border-left: 2px solid #2d3326; position: relative; transition: transform 0.4s; z-index: 100; display: flex; flex-direction: column; }
         #side-panel.hidden { transform: translateX(340px); margin-left: -340px; }
-        #btn-toggle { position: absolute; left: -45px; top: 20px; width: 45px; height: 50px; background: var(--panel); border: 2px solid #2d3326; border-right: none; border-radius: 10px 0 0 10px; color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        #btn-toggle { position: absolute; left: -45px; top: 20px; width: 45px; height: 50px; background: var(--panel); border: 2px solid #2d3326; border-right: none; border-radius: 10px 0 0 10px; color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
         .scroll-area { flex: 1; overflow-y: auto; padding: 15px; }
         .group { background: #1c2118; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
-        .group-name { font-size: 10px; font-weight: bold; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+        .group-name { font-size: 10px; font-weight: bold; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
 
-        #ai-status { background: rgba(46,139,87,0.1); color: var(--accent); padding: 10px; border-radius: 8px; border: 1px solid var(--accent); font-size: 11px; text-align: center; margin-bottom: 15px; }
+        #ai-status { background: rgba(46,139,87,0.1); color: var(--accent); padding: 10px; border-radius: 8px; border: 1px solid var(--accent); font-size: 11px; text-align: center; margin-bottom: 15px; font-weight: bold; }
 
         .cam-preview { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #444; }
         #video-feed { width: 100%; height: 100%; object-fit: cover; }
         
         .hero { position: absolute; will-change: transform; transform-origin: center bottom; }
-        .hero-card { display: flex; align-items: center; gap: 10px; background: #0a0c0a; padding: 10px; border-radius: 8px; margin-top: 5px; }
+        .hero-card { display: flex; align-items: center; gap: 10px; background: #0a0c0a; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #222; }
         .mini-img { width: 45px; height: 45px; object-fit: contain; background: #000; border-radius: 4px; }
 
         button { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #333; color: #fff; margin-top: 5px; font-size: 11px; }
         .btn-green { background: var(--accent) !important; color: #000 !important; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 10px; }
+        
+        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; }
+        label { font-size: 9px; color: #888; display: block; margin-top: 10px; text-transform: uppercase; }
         
         #qr-box { position: absolute; top: 20px; left: 20px; background: #fff; padding: 10px; border-radius: 10px; z-index: 1000; display: none; text-align: center; }
     </style>
@@ -52,18 +54,18 @@
 <div id="selector">
     <div class="mode-card" onclick="initMode('screen')">
         <h2>🖥️ ЭКРАН</h2>
-        <p>Полное управление и Лес</p>
+        <p>Основной Лес и Управление</p>
     </div>
     <div class="mode-card" onclick="initMode('phone')">
         <h2>📱 ПУЛЬТ</h2>
-        <p>Только сканер для телефона</p>
+        <p>Сканер для телефона</p>
     </div>
 </div>
 
 <div id="main-container">
     <div id="forest">
-        <div id="qr-box"><div id="qr-code"></div><p style="color:#000; font-size:10px; margin-top:5px;">ПУЛЬТ ДЛЯ ТЕЛЕФОНА</p></div>
-        <div id="bg-wrap" class="sway">
+        <div id="qr-box"><div id="qr-code"></div><p style="color:#000; font-size:10px; margin-top:5px; font-weight:bold;">СКАНЕР ПУЛЬТА</p></div>
+        <div id="bg-wrap" class="sway-active">
             <img id="bg-media" src="https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1920">
         </div>
         <div id="hero-layer"></div>
@@ -74,34 +76,34 @@
         <div class="scroll-area">
             <div id="ai-status">СИСТЕМА ГОТОВА</div>
 
-            <div class="group" id="ai-group">
-                <div class="group-name">1. ИИ Сканер героев</div>
-                <input type="password" id="api-key" placeholder="API Key Remove.bg" style="width:100%; padding:8px; margin-bottom:10px; background:#000; color:#fff; border:1px solid #444;">
+            <div class="group">
+                <div class="group-name">1. ИИ ГЕРОИ</div>
+                <input type="password" id="api-key" placeholder="Remove.bg API Key" style="width:100%; padding:8px; margin-bottom:10px; background:#000; color:#fff; border:1px solid #444; border-radius:4px;">
                 <div class="cam-preview"><video id="video-feed" autoplay playsinline></video></div>
-                <button class="btn-green" onclick="snapCamera()">✂️ СКАНИРОВАТЬ ГЕРОЯ</button>
+                <button class="btn-green" onclick="snapCamera()">✂️ ВЫРЕЗАТЬ С КАМЕРЫ</button>
                 <button onclick="$('file-pc').click()">📂 ЗАГРУЗИТЬ С ПК</button>
                 <input type="file" id="file-pc" hidden onchange="aiProcess(this.files[0])">
             </div>
 
             <div class="group">
-                <div class="group-name">2. Окружение и Звук</div>
+                <div class="group-name">2. ОКРУЖЕНИЕ</div>
                 <button onclick="$('bg-file').click()">🖼️ СМЕНИТЬ ФОН</button>
                 <input type="file" id="bg-file" hidden onchange="updateBg(this)">
                 
-                <label style="font-size:9px; display:block; margin-top:10px;">МАСШТАБ ФОНА</label>
-                <input type="range" min="50" max="300" value="100" oninput="updateBgScale(this.value)">
+                <label>МАСШТАБ ФОНА (ЗУМ)</label>
+                <input type="range" id="bg-zoom-slider" min="50" max="300" value="100" oninput="updateBgScale(this.value)">
 
-                <label style="font-size:9px; display:block; margin-top:10px;">ВЕТЕР (СКОРОСТЬ)</label>
+                <label>СКОРОСТЬ ВЕТРА</label>
                 <input type="range" min="1" max="20" value="10" oninput="updateWind(this.value)">
                 
-                <label style="font-size:9px; display:block; margin-top:10px;">ЗВУК (MP3)</label>
-                <button onclick="$('audio-file').click()">🎵 ВЫБРАТЬ ЗВУК</button>
+                <label>МУЗЫКА И ЗВУКИ</label>
+                <button onclick="$('audio-file').click()">🎵 ВЫБРАТЬ MP3</button>
                 <input type="file" id="audio-file" hidden accept="audio/*" onchange="updateAudio(this)">
                 <input type="range" id="vol-control" min="0" max="1" step="0.1" value="0.5" oninput="if(window.bgTrack) window.bgTrack.volume=this.value">
             </div>
 
             <div class="group" id="remote-group">
-                <button style="background:#4a148c" onclick="showQR()">📲 ПОДКЛЮЧИТЬ ПУЛЬТ</button>
+                <button style="background:#4a148c" onclick="showQR()">📲 ПОДКЛЮЧИТЬ ТЕЛЕФОН</button>
             </div>
 
             <div id="hero-list"></div>
@@ -126,7 +128,7 @@
             $('remote-group').style.display = 'none';
             setupPeer(null);
         } else {
-            setupPeer('forest-master-v20');
+            setupPeer('forest-master-v21');
             setupCamera();
         }
         requestAnimationFrame(loop);
@@ -144,23 +146,23 @@
         peer.on('open', (pid) => {
             if(myMode === 'phone') {
                 const urlParams = new URLSearchParams(window.location.search);
-                connectToMaster(urlParams.get('c') || 'forest-master-v20');
+                connectToMaster(urlParams.get('c') || 'forest-master-v21');
             }
         });
         peer.on('connection', c => {
             conn = c;
-            setStatus("📱 ПУЛЬТ ПОДКЛЮЧЕН");
+            setStatus("📱 ТЕЛЕФОН ПОДКЛЮЧЕН");
             conn.on('data', data => { if(data.type === 'hero') addHero(data.src); });
         });
     }
 
     function connectToMaster(target) {
         conn = peer.connect(target);
-        conn.on('open', () => setStatus("✅ СВЯЗЬ УСТАНОВЛЕНА"));
+        conn.on('open', () => setStatus("✅ СВЯЗЬ С ЭКРАНОМ"));
     }
 
     function showQR() {
-        const url = window.location.href.split('?')[0] + '?c=forest-master-v20';
+        const url = window.location.href.split('?')[0] + '?c=forest-master-v21';
         const qr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
         $('qr-code').innerHTML = `<img src="${qr}">`;
         $('qr-box').style.display = ($('qr-box').style.display === 'block') ? 'none' : 'block';
@@ -169,7 +171,7 @@
     async function aiProcess(file) {
         const key = $('api-key').value;
         if(!key) { alert("ВСТАВЬТЕ API KEY!"); return; }
-        setStatus("🚀 ИИ ОБРАБОТКА...");
+        setStatus("🚀 ИИ ВЫРЕЗАЕТ ГЕРОЯ...");
         const fd = new FormData();
         fd.append('image_file', file);
         try {
@@ -182,12 +184,12 @@
                     const reader = new FileReader();
                     reader.onloadend = () => conn.send({type: 'hero', src: reader.result});
                     reader.readAsDataURL(blob);
-                    setStatus("✨ ОТПРАВЛЕНО НА ЭКРАН");
+                    setStatus("✨ ОТПРАВЛЕНО!");
                 } else {
                     addHero(URL.createObjectURL(blob));
                     setStatus("✨ ГОТОВО!");
                 }
-            } else { setStatus("❌ ОШИБКА СЕРВЕРА"); }
+            } else { setStatus("❌ ОШИБКА ИИ"); }
         } catch(e) { setStatus("❌ ОШИБКА СЕТИ"); }
     }
 
@@ -207,12 +209,15 @@
         const forestH = $('forest').clientHeight;
         const groundY = line === 0 ? forestH * 0.45 : forestH * 0.85;
         const startSize = line === 0 ? 120 : 200;
+        
         img.style.bottom = (forestH - groundY) + "px";
         img.style.zIndex = line === 0 ? 5 : 15;
         img.style.width = startSize + "px";
         $('hero-layer').appendChild(img);
-        const hero = { id, el: img, x: -200, y: groundY, size: startSize, speed: 10, angle: 0 };
+        
+        const hero = { id, el: img, x: -200, y: groundY, size: startSize, speed: 10, angle: Math.random()*10 };
         heroes.push(hero);
+        
         const card = document.createElement('div');
         card.className = 'hero-card'; card.id = 'ui-' + id;
         card.innerHTML = `
@@ -240,13 +245,16 @@
 
     function updateBg(i) { if(i.files[0]) $('bg-media').src = URL.createObjectURL(i.files[0]); }
     
-    // ФУНКЦИЯ ЗУМА ФОНА
-    window.updateBgScale = (v) => { $('bg-media').style.transform = `scale(${v/100})`; };
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ МАСШТАБА
+    window.updateBgScale = (v) => { 
+        $('bg-media').style.transform = `scale(${v/100})`; 
+    };
 
     function updateWind(v) {
         $('bg-wrap').style.setProperty('--ws', (21 - v) / 2 + 's');
         $('bg-wrap').style.setProperty('--wp', (v / 2) + 'deg');
     }
+
     function updateAudio(i) {
         if(window.bgTrack) window.bgTrack.pause();
         window.bgTrack = new Audio(URL.createObjectURL(i.files[0]));
@@ -254,6 +262,7 @@
         window.bgTrack.volume = $('vol-control').value;
         window.bgTrack.play();
     }
+
     function setStatus(txt) { $('ai-status').innerText = txt; }
 
     function loop() {
@@ -262,7 +271,8 @@
             h.x += (h.speed / 10);
             if(h.x > w + 200) h.x = -h.size;
             h.angle += 0.04;
-            h.el.style.transform = `translateX(${h.x}px) translateY(${Math.sin(h.angle)*4}px)`;
+            // Покачивание при ходьбе
+            h.el.style.transform = `translateX(${h.x}px) translateY(${Math.sin(h.angle)*3}px)`;
         });
         requestAnimationFrame(loop);
     }
