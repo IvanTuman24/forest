@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ЛЕС 19.0 - FINAL CONTROL</title>
+    <title>ЛЕС 20.0 - TOTAL CONTROL</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --accent: #2e8b57; --panel: #141712; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
         
-        /* СТАРТОВЫЙ ВЫБОР */
         #selector { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
         .mode-card { width: 300px; padding: 30px; border: 2px solid var(--accent); background: #111; border-radius: 15px; cursor: pointer; text-align: center; }
 
         #main-container { display: flex; width: 100vw; height: 100vh; position: relative; }
         
-        /* ЛЕС (ЭКРАН) */
         #forest { flex: 1; position: relative; overflow: hidden; }
         #bg-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-        #bg-media { min-width: 100%; min-height: 100%; object-fit: cover; }
+        #bg-media { min-width: 100%; min-height: 100%; object-fit: cover; transition: transform 0.1s ease-out; }
         #hero-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
 
-        /* ВЕТЕР */
         @keyframes sway { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(var(--wp, 2deg)); } }
         .sway { animation: sway var(--ws, 6s) ease-in-out infinite; }
 
-        /* ПАНЕЛЬ УПРАВЛЕНИЯ */
         #side-panel { width: 340px; background: var(--panel); border-left: 2px solid #2d3326; position: relative; transition: transform 0.4s; z-index: 100; display: flex; flex-direction: column; }
         #side-panel.hidden { transform: translateX(340px); margin-left: -340px; }
         #btn-toggle { position: absolute; left: -45px; top: 20px; width: 45px; height: 50px; background: var(--panel); border: 2px solid #2d3326; border-right: none; border-radius: 10px 0 0 10px; color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -37,7 +33,6 @@
 
         #ai-status { background: rgba(46,139,87,0.1); color: var(--accent); padding: 10px; border-radius: 8px; border: 1px solid var(--accent); font-size: 11px; text-align: center; margin-bottom: 15px; }
 
-        /* ВИДЕО И ГЕРОИ */
         .cam-preview { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #444; }
         #video-feed { width: 100%; height: 100%; object-fit: cover; }
         
@@ -50,7 +45,6 @@
         input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 10px; }
         
         #qr-box { position: absolute; top: 20px; left: 20px; background: #fff; padding: 10px; border-radius: 10px; z-index: 1000; display: none; text-align: center; }
-        #qr-box img { width: 140px; height: 140px; }
     </style>
 </head>
 <body>
@@ -94,7 +88,10 @@
                 <button onclick="$('bg-file').click()">🖼️ СМЕНИТЬ ФОН</button>
                 <input type="file" id="bg-file" hidden onchange="updateBg(this)">
                 
-                <label style="font-size:9px">ВЕТЕР (СКОРОСТЬ)</label>
+                <label style="font-size:9px; display:block; margin-top:10px;">МАСШТАБ ФОНА</label>
+                <input type="range" min="50" max="300" value="100" oninput="updateBgScale(this.value)">
+
+                <label style="font-size:9px; display:block; margin-top:10px;">ВЕТЕР (СКОРОСТЬ)</label>
                 <input type="range" min="1" max="20" value="10" oninput="updateWind(this.value)">
                 
                 <label style="font-size:9px; display:block; margin-top:10px;">ЗВУК (MP3)</label>
@@ -129,7 +126,7 @@
             $('remote-group').style.display = 'none';
             setupPeer(null);
         } else {
-            setupPeer('forest-master-v19');
+            setupPeer('forest-master-v20');
             setupCamera();
         }
         requestAnimationFrame(loop);
@@ -142,13 +139,12 @@
         } catch(e) { setStatus("КАМЕРА ОШИБКА"); }
     }
 
-    // --- СВЯЗЬ ---
     function setupPeer(id) {
         peer = new Peer(id);
         peer.on('open', (pid) => {
             if(myMode === 'phone') {
                 const urlParams = new URLSearchParams(window.location.search);
-                connectToMaster(urlParams.get('c') || 'forest-master-v19');
+                connectToMaster(urlParams.get('c') || 'forest-master-v20');
             }
         });
         peer.on('connection', c => {
@@ -164,26 +160,22 @@
     }
 
     function showQR() {
-        const url = window.location.href.split('?')[0] + '?c=forest-master-v19';
+        const url = window.location.href.split('?')[0] + '?c=forest-master-v20';
         const qr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
         $('qr-code').innerHTML = `<img src="${qr}">`;
         $('qr-box').style.display = ($('qr-box').style.display === 'block') ? 'none' : 'block';
     }
 
-    // --- ИИ ---
     async function aiProcess(file) {
         const key = $('api-key').value;
         if(!key) { alert("ВСТАВЬТЕ API KEY!"); return; }
         setStatus("🚀 ИИ ОБРАБОТКА...");
-
         const fd = new FormData();
         fd.append('image_file', file);
-
         try {
             const res = await fetch('https://api.remove.bg/v1.0/removebg', {
                 method: 'POST', headers: {'X-Api-Key': key}, body: fd
             });
-
             if(res.ok) {
                 const blob = await res.blob();
                 if(myMode === 'phone' && conn) {
@@ -207,26 +199,20 @@
         canvas.toBlob(b => aiProcess(b));
     }
 
-    // --- ЛОГИКА ГЕРОЕВ ---
     function addHero(src) {
         const id = Date.now();
         const img = document.createElement('img');
         img.src = src; img.className = 'hero';
-        
         const line = heroes.length % 2;
         const forestH = $('forest').clientHeight;
-        // Линии: 50% и 85% от высоты. Ноги привязаны к ним.
         const groundY = line === 0 ? forestH * 0.45 : forestH * 0.85;
         const startSize = line === 0 ? 120 : 200;
-
         img.style.bottom = (forestH - groundY) + "px";
         img.style.zIndex = line === 0 ? 5 : 15;
         img.style.width = startSize + "px";
         $('hero-layer').appendChild(img);
-
         const hero = { id, el: img, x: -200, y: groundY, size: startSize, speed: 10, angle: 0 };
         heroes.push(hero);
-
         const card = document.createElement('div');
         card.className = 'hero-card'; card.id = 'ui-' + id;
         card.innerHTML = `
@@ -252,8 +238,11 @@
         if(i > -1) { heroes[i].el.remove(); heroes.splice(i, 1); $('ui-'+id).remove(); }
     };
 
-    // --- ФОН И ЗВУК ---
     function updateBg(i) { if(i.files[0]) $('bg-media').src = URL.createObjectURL(i.files[0]); }
+    
+    // ФУНКЦИЯ ЗУМА ФОНА
+    window.updateBgScale = (v) => { $('bg-media').style.transform = `scale(${v/100})`; };
+
     function updateWind(v) {
         $('bg-wrap').style.setProperty('--ws', (21 - v) / 2 + 's');
         $('bg-wrap').style.setProperty('--wp', (v / 2) + 'deg');
@@ -267,14 +256,12 @@
     }
     function setStatus(txt) { $('ai-status').innerText = txt; }
 
-    // --- ЦИКЛ ---
     function loop() {
         const w = $('forest').clientWidth;
         heroes.forEach(h => {
             h.x += (h.speed / 10);
             if(h.x > w + 200) h.x = -h.size;
             h.angle += 0.04;
-            // Анимация покачивания при ходьбе
             h.el.style.transform = `translateX(${h.x}px) translateY(${Math.sin(h.angle)*4}px)`;
         });
         requestAnimationFrame(loop);
