@@ -3,45 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ЛЕС 16.0 - FULL AI</title>
+    <title>ЛЕС 17.0 - CONNECT</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --accent: #2e8b57; --panel: #1a1d16; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: #e0e0e0; }
+        
+        /* СТАРТОВОЕ МЕНЮ */
+        #mode-selector { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .mode-btn { width: 280px; padding: 40px; border-radius: 20px; border: 2px solid var(--accent); background: #111; color: white; cursor: pointer; text-align: center; }
+        .mode-btn h2 { margin-bottom: 10px; color: var(--accent); }
+
+        /* ОСНОВНОЙ КОНТЕЙНЕР */
         #main-container { display: flex; width: 100vw; height: 100vh; position: relative; }
-        #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
-        #bg-media-container { position: absolute; width: 100%; height: 100%; z-index: 1; display: flex; align-items: center; justify-content: center; transform-origin: center center; }
-        #bg-img, #bg-video { width: auto; height: auto; min-width: 100%; min-height: 100%; display: block; }
-        #bg-video { display: none; }
-        @keyframes wind-sway { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(var(--wind-power, 2deg)); } }
-        .sway-active { animation: wind-sway var(--wind-speed, 6s) ease-in-out infinite; }
+        #forest { flex: 1; position: relative; overflow: hidden; }
+        #bg-media-container { position: absolute; width: 100%; height: 100%; z-index: 1; display: flex; align-items: center; justify-content: center; }
+        #bg-img { min-width: 100%; min-height: 100%; object-fit: cover; }
         #hero-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-        #side-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 320px; background: var(--panel); z-index: 100; border-left: 2px solid #2d3326; transition: transform 0.4s ease; display: flex; flex-direction: column; }
+
+        /* ПАНЕЛЬ */
+        #side-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 320px; background: var(--panel); z-index: 100; border-left: 2px solid #2d3326; transition: 0.4s; display: flex; flex-direction: column; }
         #side-panel.hidden { transform: translateX(100%); }
         #toggle-panel { position: absolute; left: -45px; top: 20px; width: 45px; height: 50px; background: var(--panel); border: 2px solid #2d3326; border-right: none; color: var(--accent); cursor: pointer; border-radius: 10px 0 0 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        
         #scanner-content { flex: 1; overflow-y: auto; padding: 15px; }
-        .camera-box { position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 10px; overflow: hidden; border: 2px solid #444; background: #111; margin-bottom: 10px; }
-        video#camera-feed { width: 100%; height: 100%; object-fit: cover; }
-        .camera-overlay { position: absolute; inset: 0; border: 50px solid rgba(0,0,0,0.7); pointer-events: none; }
-        .camera-overlay::after { content: ''; position: absolute; inset: 0; border: 3px solid var(--accent); }
-        #ai-status { background: rgba(46,139,87,0.1); color: var(--accent); padding: 8px; border-radius: 6px; border: 1px solid var(--accent); font-size: 11px; text-align: center; margin-bottom: 10px; min-height: 32px; }
         .group { background: #22261d; padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
-        .group-title { font-size: 10px; text-transform: uppercase; color: #777; margin-bottom: 8px; font-weight: bold; }
-        button { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; font-size: 11px; margin-top: 5px; }
+        button { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #3d4435; color: white; margin-top: 5px; font-size: 11px; }
         .btn-main { background: var(--accent) !important; color: #000 !important; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 8px; }
+        
+        /* QR КОД */
+        #qr-overlay { position: absolute; top: 20px; left: 20px; padding: 10px; background: white; border-radius: 10px; z-index: 1000; display: none; text-align: center; }
+        #qr-overlay img { width: 150px; height: 150px; }
+        #qr-overlay span { color: #000; font-size: 10px; font-weight: bold; display: block; margin-top: 5px; }
+
+        #ai-status { background: rgba(46,139,87,0.1); color: var(--accent); padding: 8px; border-radius: 6px; border: 1px solid var(--accent); font-size: 11px; text-align: center; margin-bottom: 10px; }
         .hero { position: absolute; will-change: transform; transform-origin: center bottom; }
         .journal-item { background: #151812; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #333; display: flex; gap: 10px; align-items: center; }
-        .hero-mini { width: 50px; height: 50px; border-radius: 6px; background: #000; object-fit: contain; }
+        .hero-mini { width: 40px; height: 40px; object-fit: contain; }
     </style>
 </head>
 <body>
 
+<div id="mode-selector">
+    <div class="mode-btn" onclick="startMode('screen')">
+        <h2>🖥️ ЭКРАН</h2>
+        <p>Основной лес (для компьютера)</p>
+    </div>
+    <div class="mode-btn" onclick="startMode('device')">
+        <h2>📱 УСТРОЙСТВО</h2>
+        <p>Пульт загрузки (для телефона)</p>
+    </div>
+</div>
+
 <div id="main-container">
     <div id="forest">
-        <div id="bg-media-container" class="sway-active" style="--wind-power: 2deg; --wind-speed: 6s;">
+        <div id="qr-overlay">
+            <div id="qr-code"></div>
+            <span>СКАНЕР ДЛЯ ТЕЛЕФОНА</span>
+        </div>
+        <div id="bg-media-container">
             <img id="bg-img" src="https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1500&q=80">
-            <video id="bg-video" loop muted playsinline></video>
         </div>
         <div id="hero-layer"></div>
     </div>
@@ -49,32 +71,16 @@
     <div id="side-panel">
         <div id="toggle-panel" onclick="togglePanel()">◀</div>
         <div id="scanner-content">
-            <div class="camera-box">
-                <video id="camera-feed" autoplay playsinline></video>
-                <div class="camera-overlay"></div>
-            </div>
-            
             <div id="ai-status">СИСТЕМА ГОТОВА</div>
-
-            <div class="group">
-                <div class="group-title">ИИ ОБРАБОТКА (Remove.bg)</div>
-                <input type="password" id="api-key" placeholder="Вставьте API Ключ" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:4px; margin-bottom:10px;">
-                
-                <button class="btn-main" onclick="processAIFromCamera()">✂️ ВЫРЕЗАТЬ С КАМЕРЫ</button>
-                
-                <button class="btn-main" style="background:#572e8b !important; color:white !important; margin-top:10px;" onclick="$('hero-pc').click()">📂 ЗАГРУЗИТЬ И ОБРЕЗАТЬ С ПК</button>
+            
+            <div class="group" id="local-controls">
+                <input type="password" id="api-key" placeholder="API Key Remove.bg" style="width:100%; padding:8px; margin-bottom:10px; background:#000; color:#fff; border:1px solid #444;">
+                <button class="btn-main" onclick="$('hero-pc').click()">📂 ЗАГРУЗИТЬ ГЕРОЯ</button>
                 <input type="file" id="hero-pc" hidden accept="image/*" onchange="processAIFromFile(this)">
             </div>
 
             <div class="group">
-                <div class="group-title">Фон и Окружение</div>
-                <button onclick="$('bg-in').click()">🖼️ СМЕНИТЬ ФОН</button>
-                <input type="file" id="bg-in" hidden accept="image/*,video/*" onchange="loadBg(this)">
-                
-                <label style="font-size: 9px; color: #555;">МАСШТАБ</label>
-                <input type="range" id="bg-zoom" min="50" max="300" value="100" oninput="applyBg()">
-                <label style="font-size: 9px; color: #555;">ВЕТЕР</label>
-                <input type="range" id="wind-speed-in" min="1" max="20" value="15" oninput="applyWindSpeed(this.value)">
+                <button onclick="showQR()">📲 ПОДКЛЮЧИТЬ ТЕЛЕФОН</button>
             </div>
 
             <div id="hero-journal"></div>
@@ -87,32 +93,78 @@
 <script>
     const $ = id => document.getElementById(id);
     let heroes = [];
-    let lineCounter = 0;
+    let peer, conn;
+    let myRole = '';
 
-    function togglePanel() {
-        $('side-panel').classList.toggle('hidden');
-        $('toggle-panel').innerText = $('side-panel').classList.contains('hidden') ? '▶' : '◀';
-    }
-
-    function setAIStatus(msg) { $('ai-status').innerText = msg; }
-
-    async function init() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: 1280, height: 720 } });
-            $('camera-feed').srcObject = stream;
-        } catch(e) { setAIStatus("ОШИБКА КАМЕРЫ"); }
+    // --- ИНИЦИАЛИЗАЦИЯ РЕЖИМА ---
+    function startMode(role) {
+        myRole = role;
+        $('mode-selector').style.display = 'none';
+        
+        if (role === 'device') {
+            // Режим телефона: скрываем лес, оставляем только пульт
+            $('forest').style.display = 'none';
+            $('side-panel').style.width = '100%';
+            $('side-panel').classList.remove('hidden');
+            $('toggle-panel').style.display = 'none';
+            initRemote(null); // Ждем ввода ID или скана
+        } else {
+            initRemote('forest-screen-123'); // Фиксированный ID для простоты
+        }
         requestAnimationFrame(animate);
     }
 
-    // --- ОБЩАЯ ФУНКЦИЯ ОТПРАВКИ В ИИ ---
-    async function sendToRemoveBG(blob) {
-        const key = $('api-key').value;
-        if(!key) { setAIStatus("❌ НЕТ API КЛЮЧА!"); return; }
+    // --- СВЯЗЬ PEERJS ---
+    function initRemote(id) {
+        peer = new Peer(id);
         
-        setAIStatus("🚀 ИИ ВЫРЕЗАЕТ ГЕРОЯ...");
+        peer.on('open', (myId) => {
+            if (myRole === 'device') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const connectTo = urlParams.get('connect');
+                if (connectTo) connect(connectTo);
+                else {
+                    const target = prompt("Введите ID Экрана или отсканируйте заново", "forest-screen-123");
+                    connect(target);
+                }
+            }
+        });
+
+        peer.on('connection', (c) => {
+            conn = c;
+            setAIStatus("📱 ТЕЛЕФОН ПОДКЛЮЧЕН");
+            conn.on('data', (data) => {
+                if (data.type === 'new-hero') addHero(data.src);
+            });
+        });
+    }
+
+    function connect(targetId) {
+        conn = peer.connect(targetId);
+        conn.on('open', () => setAIStatus("✅ ПОДКЛЮЧЕНО К ЭКРАНУ"));
+    }
+
+    function showQR() {
+        const qrBox = $('qr-overlay');
+        if (qrBox.style.display === 'block') { qrBox.style.display = 'none'; return; }
+        
+        const connectUrl = window.location.href.split('?')[0] + '?connect=forest-screen-123';
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(connectUrl)}`;
+        $('qr-code').innerHTML = `<img src="${qrUrl}">`;
+        qrBox.style.display = 'block';
+    }
+
+    // --- ЛОГИКА ИИ ---
+    async function processAIFromFile(input) {
+        const file = input.files[0];
+        if(!file) return;
+
+        const key = $('api-key').value;
+        if(!key) { alert("Вставь API Ключ!"); return; }
+
+        setAIStatus("🚀 ИИ ОБРАБОТКА...");
         const fd = new FormData();
-        fd.append('image_file', blob);
-        fd.append('size', 'auto');
+        fd.append('image_file', file);
 
         try {
             const res = await fetch('https://api.remove.bg/v1.0/removebg', {
@@ -122,58 +174,33 @@
             });
 
             if(res.ok) {
-                const resultBlob = await res.blob();
-                addHero(URL.createObjectURL(resultBlob));
-                setAIStatus("✨ ГОТОВО!");
-            } else {
-                const err = await res.json();
-                setAIStatus("❌ " + err.errors[0].title);
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                
+                if (myRole === 'device' && conn) {
+                    // Если мы на телефоне - отправляем на экран в формате base64
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        conn.send({ type: 'new-hero', src: reader.result });
+                        setAIStatus("✨ ОТПРАВЛЕНО НА ЭКРАН!");
+                    };
+                    reader.readAsDataURL(blob);
+                } else {
+                    addHero(url);
+                    setAIStatus("✨ ГОТОВО!");
+                }
             }
-        } catch(e) { setAIStatus("❌ ОШИБКА СЕТИ"); }
+        } catch(e) { setAIStatus("❌ ОШИБКА"); }
     }
 
-    // --- ОБРАБОТКА С КАМЕРЫ ---
-    function processAIFromCamera() {
-        const canv = $('proc-canvas'); const ctx = canv.getContext('2d'); const v = $('camera-feed');
-        const size = 800; canv.width = size; canv.height = size;
-        
-        const vW = v.videoWidth, vH = v.videoHeight;
-        const sSize = Math.min(vW, vH) * 0.7;
-        const sX = (vW - sSize) / 2;
-        const sY = (vH - sSize) / 2;
-
-        ctx.filter = "contrast(1.4) brightness(1.1)";
-        ctx.drawImage(v, sX, sY, sSize, sSize, 0, 0, size, size);
-        canv.toBlob(blob => sendToRemoveBG(blob), 'image/png');
-    }
-
-    // --- ОБРАБОТКА С ФАЙЛА ПК ---
-    function processAIFromFile(input) {
-        const file = input.files[0];
-        if(!file) return;
-
-        setAIStatus("⏳ ПОДГОТОВКА ФАЙЛА...");
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canv = $('proc-canvas'); const ctx = canv.getContext('2d');
-                canv.width = img.width; canv.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                canv.toBlob(blob => sendToRemoveBG(blob), 'image/png');
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
+    // --- ЛЕС И ГЕРОИ ---
     function addHero(src) {
         const id = Date.now();
         const el = document.createElement('img');
         el.src = src; el.className = 'hero';
         
-        const line = lineCounter++ % 2;
         const forestH = $('forest').clientHeight;
+        const line = heroes.length % 2;
         const posY = line === 0 ? forestH * 0.45 : forestH * 0.85;
         const dSize = line === 0 ? 120 : 180;
         
@@ -181,37 +208,22 @@
         el.style.zIndex = line === 0 ? 2 : 5; 
         $('hero-layer').appendChild(el);
         
-        heroes.push({ id, el, x: Math.random() * 200, y: posY, dx: 1, size: dSize, speed: 10, angle: Math.random()*10, line });
+        heroes.push({ id, el, x: -100, y: posY, size: dSize, speed: 10 + Math.random()*5, angle: 0 });
         
         const div = document.createElement('div');
         div.className = 'journal-item'; div.id = 'item-'+id;
         div.innerHTML = `<img src="${src}" class="hero-mini">
-            <div style="flex:1">
-                <input type="range" min="30" max="600" value="${dSize}" oninput="updateH(${id},'size',this.value)">
-                <input type="range" min="0" max="60" value="10" oninput="updateH(${id},'speed',this.value)">
-            </div>
-            <button onclick="delHero(${id})" style="width:20px; background:#ff4444">×</button>`;
+            <input type="range" min="30" max="500" value="${dSize}" oninput="updateH(${id},this.value)">
+            <button onclick="delHero(${id})" style="width:30px; background:#ff4444">×</button>`;
         $('hero-journal').appendChild(div);
     }
 
-    function applyBg() {
-        const s = `scale(${$('bg-zoom').value / 100})`;
-        $('bg-img').style.transform = s; $('bg-video').style.transform = s;
-    }
+    function togglePanel() { $('side-panel').classList.toggle('hidden'); }
+    function setAIStatus(msg) { $('ai-status').innerText = msg; }
     
-    function applyWindSpeed(v) { $('bg-media-container').style.setProperty('--wind-speed', (21 - v) / 2 + 's'); }
-
-    function loadBg(i) {
-        const f = i.files[0]; if(!f) return;
-        const u = URL.createObjectURL(f);
-        if(f.type.startsWith('video')) { $('bg-img').style.display='none'; $('bg-video').style.display='block'; $('bg-video').src=u; $('bg-video').play(); }
-        else { $('bg-video').style.display='none'; $('bg-img').style.display='block'; $('bg-img').src=u; }
-    }
-
-    window.updateH = (id, t, v) => {
-        const h = heroes.find(x => x.id === id); if(!h) return;
-        if(t === 'size') { h.size = v; h.el.style.width = v + 'px'; }
-        if(t === 'speed') h.speed = v;
+    window.updateH = (id, v) => {
+        const h = heroes.find(x => x.id === id);
+        if(h) { h.size = v; h.el.style.width = v + 'px'; }
     };
 
     window.delHero = id => {
@@ -222,16 +234,13 @@
     function animate() {
         const forestW = $('forest').clientWidth;
         heroes.forEach(h => {
-            h.x += (h.speed / 10);
-            if (h.x > forestW) h.x = -h.size;
+            h.x += (h.speed / 20);
+            if (h.x > forestW + 100) h.x = -h.size;
             h.angle += 0.05;
-            // Ноги привязаны к линии (y), спрайт растет вверх
-            h.el.style.transform = `translate(${h.x}px, ${h.y - h.size + Math.sin(h.angle)*4}px)`;
+            h.el.style.transform = `translate(${h.x}px, ${h.y - h.size + Math.sin(h.angle)*3}px)`;
         });
         requestAnimationFrame(animate);
     }
-
-    init();
 </script>
 </body>
 </html>
