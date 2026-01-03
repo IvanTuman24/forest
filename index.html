@@ -3,47 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЛЕС 1 - LOCAL v8.6</title>
+    <title>ЛЕС 1 - v8.6 БАЗА</title>
     <style>
         :root { --accent: #00ffcc; --panel: #111411; --ws: 5s; --wp: 2deg; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: #eee; }
         
         #main-wrapper { display: flex; width: 100vw; height: 100vh; position: relative; }
-        #forest { flex: 1; position: relative; overflow: hidden; background: #000; }
+        #forest { flex: 1; position: relative; overflow: hidden; background: #000; cursor: crosshair; }
         
-        /* Фон и анимация покачивания */
+        /* Сцена и Фон */
         #bg-container { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
         #bg-media { transition: transform 0.1s linear; will-change: transform; max-width: none; }
         .wind-effect { animation: wind var(--ws) ease-in-out infinite; }
         @keyframes wind { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(var(--wp)); } }
         
-        /* Слой персонажей */
+        /* Слой Героев */
         #hero-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
-        .hero { position: absolute; will-change: transform; transform-origin: center bottom; bottom: 10%; filter: saturate(1.6); }
+        .hero { position: absolute; will-change: transform; transform-origin: center bottom; bottom: 15%; filter: saturate(1.4) brightness(1.1) contrast(1.1); transition: opacity 0.3s; }
+        .hero.hidden { opacity: 0; }
 
-        /* Панель управления */
-        #side-panel { width: 340px; background: var(--panel); border-left: 1px solid #333; transition: 0.4s; z-index: 100; position: relative; display: flex; flex-direction: column; }
-        #side-panel.hidden { margin-right: -340px; }
+        /* Боковая панель */
+        #side-panel { width: 350px; background: var(--panel); border-left: 1px solid #333; transition: 0.4s; z-index: 100; position: relative; display: flex; flex-direction: column; box-shadow: -5px 0 20px rgba(0,0,0,0.5); }
+        #side-panel.hidden { margin-right: -350px; }
         #toggle-panel { position: absolute; left: -45px; top: 20px; width: 45px; height: 45px; background: var(--panel); border: 1px solid #333; border-radius: 10px 0 0 10px; color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
         .content { padding: 15px; overflow-y: auto; flex: 1; }
-        .group { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
-        .group-title { font-size: 10px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; font-weight: bold; }
+        .group { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #222; }
+        .group-title { font-size: 10px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
         
-        #ai-status { padding: 8px; border-radius: 6px; font-size: 11px; text-align: center; margin-bottom: 10px; background: #1a1a1a; border: 1px solid #444; color: var(--accent); }
+        #ai-status { padding: 8px; border-radius: 6px; font-size: 11px; text-align: center; margin-bottom: 10px; background: #000; border: 1px solid #333; color: var(--accent); text-transform: uppercase; }
 
         button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: #2a2d26; color: white; font-size: 11px; margin-top: 5px; transition: 0.2s; }
-        button:hover { background: #3a3d36; }
+        button:hover { background: #3a3d36; border: 1px solid var(--accent); }
         .btn-ai { background: var(--accent) !important; color: #000 !important; }
         
-        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 5px; cursor: pointer; }
         label { font-size: 9px; color: #888; display: block; margin-top: 10px; text-transform: uppercase; }
 
-        /* Список героев */
-        .h-item { background: #000; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid #444; display: flex; flex-direction: column; gap: 5px; }
-        .h-row { display: flex; align-items: center; gap: 10px; }
-        .h-thumb { width: 40px; height: 40px; object-fit: contain; background: #222; border-radius: 5px; }
+        /* Стили списка героев */
+        .h-item { background: #000; padding: 12px; border-radius: 8px; margin-top: 8px; border: 1px solid #333; }
+        .h-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .h-thumb { width: 45px; height: 45px; object-fit: contain; background: #1a1a1a; border-radius: 6px; border: 1px solid #444; }
+        .h-btns { display: flex; gap: 5px; }
+        .small-btn { padding: 5px; width: 32px; height: 32px; margin-top: 0; }
     </style>
 </head>
 <body>
@@ -62,29 +65,36 @@
             <div id="ai-status">СИСТЕМА ГОТОВА</div>
 
             <div class="group">
-                <div class="group-title">1. ЗАГРУЗКА ГЕРОЕВ</div>
-                <input type="password" id="api-key" oninput="saveKey(this.value)" placeholder="Remove.bg Key" style="width:100%; background:black; color:white; padding:8px; border:1px solid #444; margin-bottom:10px;">
+                <div class="group-title">1. ГЕРОИ</div>
+                <input type="password" id="api-key" oninput="saveKey(this.value)" placeholder="Ключ Remove.bg" style="width:100%; background:black; color:white; padding:8px; border:1px solid #333; margin-bottom:10px; border-radius: 5px;">
                 
-                <button class="btn-ai" onclick="$('h-ai').click()">✂️ ЗАГРУЗИТЬ С ОБРЕЗКОЙ ИИ</button>
-                <button onclick="$('h-direct').click()">📂 ЗАГРУЗИТЬ БЕЗ ИИ (PNG)</button>
+                <button class="btn-ai" onclick="$('h-ai').click()">✂️ ЗАГРУЗИТЬ ЧЕРЕЗ ИИ</button>
+                <button onclick="$('h-pc').click()">📂 ЗАГРУЗИТЬ БЕЗ ИИ (PNG)</button>
                 
-                <input type="file" id="h-ai" hidden onchange="processAI(this.files[0])">
-                <input type="file" id="h-direct" hidden onchange="processDirect(this.files[0])">
+                <input type="file" id="h-ai" hidden onchange="processHero(this.files[0], true)">
+                <input type="file" id="h-pc" hidden onchange="processHero(this.files[0], false)">
             </div>
 
             <div class="group">
                 <div class="group-title">2. УПРАВЛЕНИЕ ФОНОМ</div>
-                <label>МАСШТАБ ФОНА</label>
-                <input type="range" min="50" max="300" value="100" oninput="updateBg('scale', this.value)">
-                <label>СКОРОСТЬ ПОКАЧИВАНИЯ</label>
-                <input type="range" min="1" max="15" value="5" oninput="updateBg('speed', this.value)">
-                <button onclick="$('bg-file').click()">🖼️ СМЕНИТЬ ФОН</button>
+                <label>МАСШТАБ</label>
+                <input type="range" min="50" max="300" value="100" oninput="updateBg('z', this.value)">
+                
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1"><label>СМЕЩЕНИЕ X</label><input type="range" min="-1000" max="1000" value="0" oninput="updateBg('x', this.value)"></div>
+                    <div style="flex:1"><label>СМЕЩЕНИЕ Y</label><input type="range" min="-1000" max="1000" value="0" oninput="updateBg('y', this.value)"></div>
+                </div>
+
+                <label>ПОКАЧИВАНИЕ (ВЕТЕР)</label>
+                <input type="range" min="0" max="15" value="2" oninput="updateBg('w', this.value)">
+                
+                <button onclick="$('bg-file').click()" style="margin-top:15px;">🖼️ СМЕНИТЬ ФОН</button>
                 <input type="file" id="bg-file" hidden onchange="uploadBg(this)">
             </div>
 
             <div class="group">
-                <div class="group-title">3. ЗВУК</div>
-                <button onclick="$('snd-file').click()" style="background:#1a4a1a">🎵 ДОБАВИТЬ МУЗЫКУ</button>
+                <div class="group-title">3. АУДИО</div>
+                <button onclick="$('snd-file').click()" style="background:#1a4a1a">🎵 ЗАГРУЗИТЬ ЗВУК</button>
                 <label>ГРОМКОСТЬ</label>
                 <input type="range" min="0" max="1" step="0.1" value="0.5" oninput="if(bgAudio) bgAudio.volume = this.value">
                 <input type="file" id="snd-file" hidden accept="audio/*" onchange="uploadSnd(this)">
@@ -98,45 +108,32 @@
 <script>
     const $ = id => document.getElementById(id);
     let heroes = [], bgAudio = null;
+    let bgState = { z: 1, x: 0, y: 0 };
 
-    // Сохранение ключа
     window.onload = () => { if(localStorage.getItem('rbg_key')) $('api-key').value = localStorage.getItem('rbg_key'); };
     function saveKey(v) { localStorage.setItem('rbg_key', v); }
 
-    // 1. Загрузка напрямую (без ИИ) [cite: 2025-12-30]
-    function processDirect(file) {
+    // Загрузка героев (с ИИ или без) [cite: 2025-12-30]
+    async function processHero(file, useAI) {
         if(!file) return;
-        const reader = new FileReader();
-        reader.onload = e => addHero(e.target.result);
-        reader.readAsDataURL(file);
-    }
-
-    // 2. Загрузка через ИИ [cite: 2025-12-30]
-    async function processAI(file) {
-        const key = $('api-key').value;
-        if(!key) return alert("Введите API Ключ для работы ИИ!");
-        
-        setStatus("🚀 ИИ ОБРАБАТЫВАЕТ...");
-        const fd = new FormData();
-        fd.append('image_file', file);
-
-        try {
-            const res = await fetch('https://api.remove.bg/v1.0/removebg', {
-                method: 'POST',
-                headers: { 'X-Api-Key': key },
-                body: fd
-            });
-
-            if(res.ok) {
-                const blob = await res.blob();
-                const reader = new FileReader();
-                reader.onload = e => { addHero(e.target.result); setStatus("✅ ГОТОВО", "ok"); };
-                reader.readAsDataURL(blob);
-            } else {
-                setStatus("❌ ОШИБКА ИИ", "err");
-            }
-        } catch(e) {
-            setStatus("❌ СБОЙ СЕТИ", "err");
+        if(useAI) {
+            const key = $('api-key').value;
+            if(!key) return alert("Введите API Ключ!");
+            setStatus("🚀 ИИ ОБРАБОТКА...");
+            const fd = new FormData(); fd.append('image_file', file);
+            try {
+                const res = await fetch('https://api.remove.bg/v1.0/removebg', { method: 'POST', headers: { 'X-Api-Key': key }, body: fd });
+                if(res.ok) {
+                    const blob = await res.blob();
+                    const reader = new FileReader();
+                    reader.onload = e => { addHero(e.target.result); setStatus("✅ ГОТОВО", "ok"); };
+                    reader.readAsDataURL(blob);
+                } else setStatus("❌ ОШИБКА ИИ", "err");
+            } catch(e) { setStatus("❌ СБОЙ СЕТИ", "err"); }
+        } else {
+            const reader = new FileReader();
+            reader.onload = e => addHero(e.target.result);
+            reader.readAsDataURL(file);
         }
     }
 
@@ -147,33 +144,28 @@
         img.className = 'hero';
         img.id = 'h-' + id;
         img.style.width = "200px";
-        img.style.left = "-250px"; // Начальная позиция вне экрана
+        img.style.left = "-300px";
         $('hero-layer').appendChild(img);
 
-        const heroObj = {
-            id,
-            el: img,
-            x: -250,
-            speed: 2,
-            angle: Math.random() * 10
-        };
+        const heroObj = { id, el: img, x: -300, speed: 2, angle: Math.random()*10, vis: true };
         heroes.push(heroObj);
 
-        // Добавление в список управления [cite: 2025-12-30]
+        // UI элемент в списке [cite: 2025-12-30]
         const item = document.createElement('div');
         item.className = 'h-item';
         item.id = 'ui-' + id;
         item.innerHTML = `
-            <div class="h-row">
+            <div class="h-header">
                 <img src="${src}" class="h-thumb">
-                <div style="flex:1">
-                    <label>РАЗМЕР</label>
-                    <input type="range" min="50" max="600" value="200" oninput="updateHero(${id}, 'size', this.value)">
+                <div class="h-btns">
+                    <button class="small-btn" id="vis-${id}" onclick="toggleVis(${id})">👁️</button>
+                    <button class="small-btn" style="background:#522" onclick="removeHero(${id})">×</button>
                 </div>
-                <button style="width:30px; background:#522;" onclick="removeHero(${id})">×</button>
             </div>
-            <label>СКОРОСТЬ ДВИЖЕНИЯ</label>
-            <input type="range" min="0" max="10" step="0.5" value="2" oninput="updateHero(${id}, 'speed', this.value)">
+            <label>РАЗМЕР</label>
+            <input type="range" min="50" max="800" value="200" oninput="updateHero(${id}, 'sz', this.value)">
+            <label>СКОРОСТЬ</label>
+            <input type="range" min="0" max="15" step="0.5" value="2" oninput="updateHero(${id}, 'sp', this.value)">
         `;
         $('hero-list').appendChild(item);
     }
@@ -181,8 +173,17 @@
     function updateHero(id, type, val) {
         const h = heroes.find(x => x.id === id);
         if(!h) return;
-        if(type === 'size') h.el.style.width = val + "px";
-        if(type === 'speed') h.speed = parseFloat(val);
+        if(type === 'sz') h.el.style.width = val + "px";
+        if(type === 'sp') h.speed = parseFloat(val);
+    }
+
+    function toggleVis(id) {
+        const h = heroes.find(x => x.id === id);
+        if(h) {
+            h.vis = !h.vis;
+            h.el.classList.toggle('hidden', !h.vis);
+            $(`vis-${id}`).innerText = h.vis ? '👁️' : '🌑';
+        }
     }
 
     function removeHero(id) {
@@ -195,8 +196,12 @@
     }
 
     function updateBg(type, val) {
-        if(type === 'scale') $('bg-media').style.transform = `scale(${val/100})`;
-        if(type === 'speed') document.documentElement.style.setProperty('--ws', (16 - val) + 's');
+        if(type === 'z') bgState.z = val / 100;
+        if(type === 'x') bgState.x = val;
+        if(type === 'y') bgState.y = val;
+        if(type === 'w') document.documentElement.style.setProperty('--wp', val + 'deg');
+        
+        $('bg-media').style.transform = `translate(${bgState.x}px, ${bgState.y}px) scale(${bgState.z})`;
     }
 
     function uploadBg(i) {
@@ -211,11 +216,7 @@
         if(i.files[0]) {
             if(bgAudio) bgAudio.pause();
             const r = new FileReader();
-            r.onload = e => {
-                bgAudio = new Audio(e.target.result);
-                bgAudio.loop = true;
-                bgAudio.play();
-            };
+            r.onload = e => { bgAudio = new Audio(e.target.result); bgAudio.loop = true; bgAudio.play(); };
             r.readAsDataURL(i.files[0]);
         }
     }
@@ -226,19 +227,16 @@
     }
 
     function update() {
-        const screenWidth = $('forest').clientWidth;
+        const w = $('forest').clientWidth;
         heroes.forEach(h => {
+            if(!h.vis) return;
             h.x += h.speed;
             h.angle += 0.05;
-            // Плавное покачивание героя при ходьбе
-            const walkCycle = Math.sin(h.angle) * 5;
-            
-            if(h.x > screenWidth + 300) h.x = -300;
-            h.el.style.transform = `translateX(${h.x}px) translateY(${walkCycle}px)`;
+            if(h.x > w + 400) h.x = -400;
+            h.el.style.transform = `translateX(${h.x}px) translateY(${Math.sin(h.angle)*5}px)`;
         });
         requestAnimationFrame(update);
     }
-
     update();
 </script>
 </body>
